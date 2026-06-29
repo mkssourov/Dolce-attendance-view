@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOLCE ATTENDANCE</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --primary:#1a56db;--primary-dark:#1e40af;--primary-light:#e8f0fe;
+  --success:#16a34a;--success-light:#dcfce7;
+  --danger:#dc2626;--danger-light:#fee2e2;
+  --warning:#d97706;--warning-light:#fef3c7;
+  --bonus:#7c3aed;--bonus-light:#ede9fe;
+  --half:#f59e0b;--half-light:#fef9c3;
+  --leave:#0891b2;--leave-light:#e0f2fe;
+  --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;--g300:#d1d5db;
+  --g400:#9ca3af;--g500:#6b7280;--g600:#4b5563;--g700:#374151;
+  --g800:#1f2937;--g900:#111827;--w:#fff;
+  --sh1:0 1px 3px rgba(0,0,0,.08);--sh2:0 4px 14px rgba(0,0,0,.1);
+  --sh3:0 12px 32px rgba(0,0,0,.14);--r:12px;--tr:all .22s ease;
+  /* Glow colours */
+  --glow-blue:0 0 18px rgba(26,86,219,.45),0 0 40px rgba(26,86,219,.18);
+  --glow-green:0 0 14px rgba(22,163,74,.5),0 0 32px rgba(22,163,74,.2);
+  --glow-purple:0 0 14px rgba(124,58,237,.5),0 0 32px rgba(124,58,237,.2);
+  --glow-cyan:0 0 14px rgba(8,145,178,.5),0 0 32px rgba(8,145,178,.2);
+  --glow-card:0 0 0 1px rgba(26,86,219,.08),0 4px 24px rgba(26,86,219,.1);
+}
+body{font-family:'Inter','Noto Sans Bengali',sans-serif;background:#0f172a;color:var(--g800);min-height:100vh;}
+
+/* ─── ANIMATED BG ─── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 40%,#0f2744 100%);
+  z-index:-2;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;
+  background:
+    radial-gradient(ellipse 700px 500px at 20% 20%,rgba(26,86,219,.12) 0%,transparent 70%),
+    radial-gradient(ellipse 600px 400px at 80% 70%,rgba(124,58,237,.1) 0%,transparent 70%),
+    radial-gradient(ellipse 400px 300px at 60% 10%,rgba(8,145,178,.08) 0%,transparent 60%);
+  animation:bgShift 12s ease-in-out infinite alternate;
+}
+@keyframes bgShift{
+  0%{opacity:1;}50%{opacity:.7;}100%{opacity:1;}
+}
+
+/* ─── PARTICLES ─── */
+.particles{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
+.p{position:absolute;border-radius:50%;animation:float linear infinite;}
+@keyframes float{
+  0%{transform:translateY(100vh) rotate(0deg);opacity:0;}
+  10%{opacity:.6;}
+  90%{opacity:.3;}
+  100%{transform:translateY(-10vh) rotate(720deg);opacity:0;}
+}
+
+/* ─── HEADER ─── */
+.hdr{
+  background:linear-gradient(135deg,rgba(26,86,219,.9),rgba(30,64,175,.95));
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.1);
+  box-shadow:0 4px 32px rgba(26,86,219,.4),0 1px 0 rgba(255,255,255,.08) inset;
+  position:sticky;top:0;z-index:100;
+}
+.hdr-in{max-width:1280px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.hdr-logo{display:flex;align-items:center;gap:12px;}
+.logo-ic{
+  width:46px;height:46px;background:rgba(255,255,255,.15);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:0 0 16px rgba(255,255,255,.2),0 0 0 1px rgba(255,255,255,.15) inset;
+  animation:logoPulse 3s ease-in-out infinite;
+}
+@keyframes logoPulse{0%,100%{box-shadow:0 0 16px rgba(255,255,255,.2),0 0 0 1px rgba(255,255,255,.15) inset;}50%{box-shadow:0 0 28px rgba(255,255,255,.35),0 0 0 1px rgba(255,255,255,.25) inset;}}
+.hdr-logo h1{font-size:19px;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.hdr-logo p{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.live-badge{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);
+  border-radius:20px;padding:5px 13px;font-size:12px;font-weight:600;color:#4ade80;
+  box-shadow:0 0 12px rgba(74,222,128,.2);
+}
+.live-dot{width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite;box-shadow:0 0 6px #4ade80;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.5);}}
+.sync-btn{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+  color:#fff;padding:7px 15px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;
+  transition:var(--tr);display:flex;align-items:center;gap:6px;
+  box-shadow:0 0 12px rgba(255,255,255,.05);
+}
+.sync-btn:hover{background:rgba(255,255,255,.22);box-shadow:0 0 20px rgba(255,255,255,.12);}
+.last-sync{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;text-align:right;}
+@keyframes spinA{to{transform:rotate(360deg)}}
+.sync-ring{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spinA .7s linear infinite;vertical-align:middle;}
+
+/* ─── MAIN ─── */
+.main{max-width:1280px;margin:0 auto;padding:22px 24px;}
+
+/* ─── GLASS CARD BASE ─── */
+.glass{
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.7);
+}
+
+/* ─── STATS BAR ─── */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{
+  background:rgba(255,255,255,.96);
+  border-radius:14px;padding:16px 18px;
+  border:1px solid rgba(255,255,255,.6);
+  display:flex;align-items:center;gap:13px;
+  box-shadow:var(--sh1),0 0 0 1px rgba(26,86,219,.06);
+  transition:var(--tr);position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;inset:0;opacity:0;
+  background:linear-gradient(135deg,rgba(26,86,219,.04),transparent);
+  transition:opacity .3s;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--glow-card);}
+.stat-card:hover::before{opacity:1;}
+.stat-ic{width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;transition:var(--tr);}
+.stat-card:hover .stat-ic{transform:scale(1.1);}
+.stat-lbl{font-size:11px;color:var(--g600);font-weight:500;}
+.stat-val{font-size:24px;font-weight:800;color:var(--g900);line-height:1.1;margin-top:2px;}
+
+/* ─── DEBUG ─── */
+.debug-panel{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:#78350f;display:none;}
+.debug-panel.show{display:block;}
+
+/* ─── CONTROLS ─── */
+.controls{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.sw{flex:1;min-width:220px;position:relative;}
+.sw input{
+  width:100%;padding:10px 16px 10px 40px;
+  border:1px solid rgba(255,255,255,.3);border-radius:10px;font-size:14px;
+  background:rgba(255,255,255,.95);outline:none;transition:var(--tr);
+  box-shadow:var(--sh1);
+}
+.sw input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.15),var(--glow-blue);}
+.sw .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--g400);}
+.fsel{
+  padding:9px 13px;border:1px solid rgba(255,255,255,.3);border-radius:10px;
+  font-size:13px;background:rgba(255,255,255,.95);cursor:pointer;outline:none;color:var(--g700);
+  box-shadow:var(--sh1);transition:var(--tr);
+}
+.fsel:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.1);}
+
+/* ─── SECTION TITLE ─── */
+.sec-title{
+  font-size:15px;font-weight:700;color:#fff;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+  text-shadow:0 0 20px rgba(255,255,255,.3);
+}
+
+/* ─── EMP GRID ─── */
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;}
+
+/* ─── EMP CARD ─── */
+.emp-card{
+  background:rgba(255,255,255,.97);
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.7);
+  overflow:hidden;cursor:pointer;
+  transition:var(--tr);
+  box-shadow:var(--sh1),0 0 0 1px rgba(26,86,219,.05);
+  position:relative;
+}
+.emp-card::after{
+  content:'';position:absolute;inset:0;border-radius:16px;
+  box-shadow:0 0 0 0 rgba(26,86,219,0);
+  transition:box-shadow .3s;pointer-events:none;
+}
+.emp-card:hover{transform:translateY(-4px);}
+.emp-card:hover::after{box-shadow:var(--glow-blue);}
+.ec-top{
+  padding:22px 18px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;
+  border-bottom:1px solid var(--g100);
+  background:linear-gradient(160deg,#eef3ff 0%,#f8faff 60%,#fff 100%);
+  position:relative;overflow:hidden;
+}
+.ec-top::before{
+  content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);
+  width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,rgba(26,86,219,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.av-wrap{position:relative;margin-bottom:12px;}
+.ec-av{
+  width:92px;height:92px;border-radius:50%;object-fit:cover;
+  border:3px solid #fff;
+  box-shadow:0 0 0 3px var(--primary),var(--glow-blue);
+  transition:var(--tr);
+}
+.emp-card:hover .ec-av{
+  box-shadow:0 0 0 3px var(--primary),0 0 22px rgba(26,86,219,.55),0 0 50px rgba(26,86,219,.25);
+  transform:scale(1.04);
+}
+.status-dot{
+  position:absolute;bottom:4px;right:4px;width:18px;height:18px;
+  border-radius:50%;border:2.5px solid #fff;
+  box-shadow:0 0 8px currentColor;
+}
+.ec-name{font-size:15px;font-weight:700;color:var(--g900);margin-bottom:3px;}
+.ec-sub{font-size:11px;color:var(--g500);margin-bottom:3px;}
+.ec-dept{
+  display:inline-block;background:var(--primary-light);color:var(--primary);
+  font-size:11px;font-weight:600;padding:3px 11px;border-radius:12px;margin-top:4px;
+  box-shadow:0 0 8px rgba(26,86,219,.15);
+}
+.ec-body{padding:13px 16px;}
+.ms-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:11px;}
+.ms{text-align:center;padding:7px 3px;border-radius:9px;background:var(--g50);transition:var(--tr);}
+.ms:hover{transform:scale(1.06);}
+.ms-v{font-size:15px;font-weight:700;}
+.ms-l{font-size:9px;color:var(--g500);margin-top:1px;}
+.ms-p .ms-v{color:var(--success);}
+.ms-a .ms-v{color:var(--danger);}
+.ms-h .ms-v{color:var(--half);}
+.ms-b .ms-v{color:var(--bonus);}
+.ms-lv .ms-v{color:var(--leave);}
+.pb-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+.pb-l{font-size:11px;color:var(--g500);}
+.pb-p{font-size:11px;font-weight:700;color:var(--primary);}
+.pbar{height:7px;background:var(--g200);border-radius:4px;overflow:hidden;}
+.pbar-f{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);border-radius:4px;transition:width .6s ease;box-shadow:0 0 6px rgba(22,163,74,.4);}
+
+/* ─── OVERLAY / MODAL ─── */
+.overlay{position:fixed;inset:0;background:rgba(10,15,40,.7);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);}
+.overlay.open{display:flex;}
+.modal{
+  background:rgba(255,255,255,.98);border-radius:20px;width:100%;max-width:900px;max-height:93vh;
+  overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px rgba(255,255,255,.2),0 32px 80px rgba(0,0,0,.35),var(--glow-blue);
+  border:1px solid rgba(26,86,219,.15);
+}
+.m-hdr{padding:22px 26px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.m-prof{display:flex;align-items:center;gap:18px;}
+.m-av{
+  width:80px;height:80px;border-radius:50%;object-fit:cover;
+  border:3px solid #fff;box-shadow:0 0 0 3px var(--primary),var(--glow-blue);
+}
+.m-info h2{font-size:20px;font-weight:800;color:var(--g900);}
+.m-info .mid{font-size:12px;color:var(--g500);margin-top:3px;}
+.m-info .mdept{font-size:12px;color:var(--primary);font-weight:600;margin-top:3px;}
+.close-btn{
+  background:var(--g100);border:none;width:36px;height:36px;border-radius:50%;
+  cursor:pointer;font-size:17px;color:var(--g600);
+  display:flex;align-items:center;justify-content:center;transition:var(--tr);flex-shrink:0;
+}
+.close-btn:hover{background:var(--danger-light);color:var(--danger);box-shadow:0 0 12px rgba(220,38,38,.3);}
+.m-tabs{display:flex;gap:2px;padding:14px 26px 0;border-bottom:2px solid var(--g100);}
+.tab-btn{padding:8px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--g500);border-radius:8px 8px 0 0;transition:var(--tr);position:relative;}
+.tab-btn.on{color:var(--primary);font-weight:700;}
+.tab-btn.on::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--primary);box-shadow:0 0 8px rgba(26,86,219,.6);}
+.tab-btn:hover:not(.on){color:var(--g700);background:var(--g50);}
+.m-body{padding:22px 26px;overflow-y:auto;flex:1;}
+.tc{display:none;}
+.tc.on{display:block;}
+
+/* ─── SUMMARY CARDS ─── */
+.sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:20px;}
+.sc{padding:13px;border-radius:11px;text-align:center;transition:var(--tr);cursor:default;}
+.sc:hover{transform:translateY(-2px);}
+.sc-v{font-size:28px;font-weight:800;}
+.sc-l{font-size:11px;font-weight:600;margin-top:4px;}
+.sc-p{background:var(--success-light);}.sc-p .sc-v,.sc-p .sc-l{color:var(--success);}
+.sc-p:hover{box-shadow:var(--glow-green);}
+.sc-a{background:var(--danger-light);}.sc-a .sc-v,.sc-a .sc-l{color:var(--danger);}
+.sc-h{background:var(--half-light);}.sc-h .sc-v,.sc-h .sc-l{color:var(--warning);}
+.sc-b{background:var(--bonus-light);}.sc-b .sc-v,.sc-b .sc-l{color:var(--bonus);}
+.sc-b:hover{box-shadow:var(--glow-purple);}
+.sc-t{background:var(--primary-light);}.sc-t .sc-v,.sc-t .sc-l{color:var(--primary);}
+.sc-t:hover{box-shadow:var(--glow-blue);}
+.sc-lv{background:var(--leave-light);}.sc-lv .sc-v,.sc-lv .sc-l{color:var(--leave);}
+.sc-lv:hover{box-shadow:var(--glow-cyan);}
+
+/* ─── MONTH NAV ─── */
+.mnav{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.mnav label{font-size:13px;font-weight:500;color:var(--g600);}
+.msel{padding:7px 12px;border:1px solid var(--g300);border-radius:8px;font-size:13px;cursor:pointer;outline:none;background:var(--w);transition:var(--tr);}
+.msel:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(26,86,219,.12);}
+
+/* ─── TABLES ─── */
+.htw,.atw{border-radius:12px;overflow:hidden;border:1px solid var(--g200);margin-bottom:16px;box-shadow:var(--sh1);}
+.ht,.att{width:100%;border-collapse:collapse;font-size:13px;}
+.ht th,.att th{background:var(--g50);padding:10px 13px;text-align:left;font-weight:600;color:var(--g600);font-size:11px;letter-spacing:.4px;border-bottom:1px solid var(--g200);}
+.ht td,.att td{padding:10px 13px;border-top:1px solid var(--g100);color:var(--g700);}
+.ht tr:hover td,.att tr:hover td{background:#f0f4ff;}
+.att tr.fri td{background:#fffbf5;}
+.att tr.lv-row td{background:#e0f2fe;}
+
+/* ─── BADGES ─── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;transition:var(--tr);}
+.bp{background:var(--success-light);color:var(--success);box-shadow:0 0 6px rgba(22,163,74,.2);}
+.ba{background:var(--danger-light);color:var(--danger);}
+.bh{background:var(--half-light);color:var(--warning);}
+.bho{background:var(--g100);color:var(--g500);}
+.bb{background:var(--bonus-light);color:var(--bonus);box-shadow:0 0 6px rgba(124,58,237,.2);}
+.blv{background:var(--leave-light);color:var(--leave);box-shadow:0 0 6px rgba(8,145,178,.2);}
+
+/* ─── REPORT PREVIEW ─── */
+.rep-prev{background:var(--g50);border-radius:12px;padding:16px;border:1px solid var(--g200);margin-bottom:16px;box-shadow:var(--sh1);}
+.dl-btn{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;border:none;padding:12px 24px;border-radius:11px;cursor:pointer;
+  font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;
+  transition:var(--tr);box-shadow:0 4px 14px rgba(26,86,219,.4),var(--glow-blue);
+}
+.dl-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,86,219,.5),0 0 40px rgba(26,86,219,.3);}
+.dl-btn:active{transform:scale(.97);}
+
+/* ─── LOADING / EMPTY ─── */
+.loading{text-align:center;padding:60px 20px;color:rgba(255,255,255,.5);}
+.spinner{
+  width:36px;height:36px;border:3px solid rgba(26,86,219,.2);border-top-color:var(--primary);
+  border-radius:50%;animation:spinA .8s linear infinite;margin:0 auto 14px;
+  box-shadow:0 0 12px rgba(26,86,219,.3);
+}
+.empty{text-align:center;padding:50px 20px;color:rgba(255,255,255,.4);}
+
+/* ─── TOAST ─── */
+.toast{
+  position:fixed;top:20px;right:20px;
+  background:rgba(15,23,42,.95);
+  backdrop-filter:blur(12px);
+  color:#fff;padding:11px 18px;border-radius:11px;font-size:13px;z-index:9999;
+  display:none;align-items:center;gap:8px;
+  box-shadow:var(--sh3),0 0 20px rgba(26,86,219,.25);
+  border:1px solid rgba(255,255,255,.1);max-width:320px;
+}
+.toast.show{display:flex;animation:tin .3s ease;}
+@keyframes tin{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ─── GLOWING DIVIDER ─── */
+.glow-hr{height:1px;border:none;background:linear-gradient(90deg,transparent,rgba(26,86,219,.4),transparent);margin:20px 0;}
+
+@media(max-width:620px){
+  .main{padding:14px;}
+  .m-hdr,.m-tabs,.m-body{padding-left:16px;padding-right:16px;}
+  .modal{border-radius:16px;}
+  .ms-row{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<div class="particles" id="particles"></div>
+
+<div class="toast" id="toast">✓ <span id="toast-txt"></span></div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-in">
+    <div class="hdr-logo">
+      <div class="logo-ic">D</div>
+      <div><h1>DOLCE</h1><p>SMART ATTENDENCE</p></div>
+    </div>
+    <div class="hdr-right">
+      <div class="live-badge"><span class="live-dot"></span> লাইভ অটো-সিঙ্ক</div>
+      <div>
+        <button class="sync-btn" onclick="manualSync()"><span id="sync-ico">🔄</span> এখনই আপডেট</button>
+        <div class="last-sync" id="last-sync">শেষ আপডেট: লোড হচ্ছে...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div id="debug" class="debug-panel"></div>
+
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-ic" style="background:#e8f0fe">👥</div><div><div class="stat-lbl">মোট কর্মচারী</div><div class="stat-val" id="s-tot">-</div></div></div>
+    <div class="stat-card"><div class="stat-ic" style="background:#dcfce7">✅</div><div><div class="stat-lbl">আজ উপস্থিত</div><div class="stat-val" id="s-pre">-</div></div></div>
+    <div class="stat-card"><div class="stat-ic" style="background:#fee2e2">❌</div><div><div class="stat-lbl">আজ অনুপস্থিত</div><div class="stat-val" id="s-abs">-</div></div></div>
+    <div class="stat-card"><div class="stat-ic" style="background:#fef3c7">⏰</div><div><div class="stat-lbl">হাফ টাইম</div><div class="stat-val" id="s-hal">-</div></div></div>
+    <div class="stat-card"><div class="stat-ic" style="background:#ede9fe">🌟</div><div><div class="stat-lbl">বোনাস</div><div class="stat-val" id="s-bon">-</div></div></div>
+    <div class="stat-card"><div class="stat-ic" style="background:#e0f2fe">🏖️</div><div><div class="stat-lbl">অনুমোদিত ছুটি</div><div class="stat-val" id="s-lv">-</div></div></div>
+  </div>
+
+  <div class="controls">
+    <div class="sw"><span class="si">🔍</span><input type="text" id="q" placeholder="নাম বা আইডি দিয়ে খুঁজুন..." oninput="doFilter()"></div>
+    <select class="fsel" id="dF" onchange="doFilter()"><option value="">সকল বিভাগ</option></select>
+    <select class="fsel" id="mF" onchange="doFilter()"></select>
+  </div>
+  <div class="sec-title">👤 EMPLOYE LIST</div>
+  <div class="emp-grid" id="grid"><div class="loading"><div class="spinner"></div><p>ডেটা লোড হচ্ছে...</p></div></div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="ovClick(event)">
+  <div class="modal">
+    <div class="m-hdr">
+      <div class="m-prof">
+        <img class="m-av" id="mAv" src="" alt="">
+        <div class="m-info"><h2 id="mNm"></h2><div class="mid" id="mId"></div><div class="mdept" id="mDp"></div></div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-tabs">
+      <button class="tab-btn on" onclick="switchTab('ov')">📊 ওভারভিউ</button>
+      <button class="tab-btn" onclick="switchTab('hist')">🗂️ সকল মাস</button>
+      <button class="tab-btn" onclick="switchTab('log')">📅 উপস্থিতি লগ</button>
+      <button class="tab-btn" onclick="switchTab('rep')">📄 রিপোর্ট</button>
+    </div>
+    <div class="m-body">
+      <!-- OVERVIEW -->
+      <div class="tc on" id="tc-ov">
+        <div class="mnav"><label>মাস:</label><select class="msel" id="ovM" onchange="renderOv()"></select></div>
+        <div class="sum-grid" id="ovCards"></div>
+        <div class="glow-hr"></div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+            <span style="font-size:13px;font-weight:600;color:var(--g700)">উপস্থিতির হার (ছুটি বাদে)</span>
+            <span style="font-size:13px;font-weight:800;color:var(--primary)" id="ovRate">-</span>
+          </div>
+          <div class="pbar"><div class="pbar-f" id="ovBar" style="width:0%"></div></div>
+        </div>
+      </div>
+      <!-- ALL MONTHS HISTORY -->
+      <div class="tc" id="tc-hist">
+        <p style="font-size:13px;color:var(--g600);margin-bottom:13px;">CSV-এ থাকা সকল মাসের সম্পূর্ণ ইতিহাস।</p>
+        <div class="htw"><table class="ht">
+          <thead><tr><th>মাস</th><th>উপস্থিত</th><th>অনুপস্থিত</th><th>হাফ টাইম</th><th>বোনাস</th><th>অনু. ছুটি</th><th>কর্ম দিবস</th><th>হার</th></tr></thead>
+          <tbody id="histBody"></tbody>
+        </table></div>
+      </div>
+      <!-- LOG -->
+      <div class="tc" id="tc-log">
+        <div class="mnav"><label>মাস:</label><select class="msel" id="logM" onchange="renderLog()"></select></div>
+        <div class="atw"><table class="att">
+          <thead><tr><th>তারিখ</th><th>বার</th><th>ইন টাইম</th><th>আউট টাইম</th><th>অবস্থা</th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table></div>
+      </div>
+      <!-- REPORT -->
+      <div class="tc" id="tc-rep">
+        <div class="mnav" style="margin-bottom:13px;"><label>মাস:</label><select class="msel" id="repM" onchange="renderRepPrev()"></select></div>
+        <div class="rep-prev" id="repPrev"></div>
+        <button class="dl-btn" onclick="downloadPDF()">📥 PDF ইনভয়েস ডাউনলোড</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ CONFIG ═══════════════════════════════════════════
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRKLe15yfAAG2cY47l0fjsF9oPum_Db8JEUGB-kFlq9BsywkI-zBrpzHl4XX0g-wbARM7YvJ-wM6SdL/pub?gid=1893840663&single=true&output=csv';
+
+const AV_BG = ['b6e3f4','d1d4f9','c0aede','ffd5dc','ffdfbf','e0f7fa','f3e5f5','d4edda','fce4ec','e8f5e9'];
+function stableAvatar(empId) {
+  const seed = encodeURIComponent(empId.trim());
+  const bgIdx = [...empId].reduce((a,c) => a + c.charCodeAt(0), 0) % AV_BG.length;
+  return 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + seed + '&backgroundColor=' + AV_BG[bgIdx];
+}
+
+const BND = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+const BNM = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+const NOW = new Date();
+
+let employees = {}, lastHash = '', curEmp = null, detectedCols = null;
+
+// ═══ PARTICLES ═════════════════════════════════════════
+(function initParticles() {
+  const c = document.getElementById('particles');
+  const colors = ['rgba(26,86,219,.35)','rgba(124,58,237,.3)','rgba(8,145,178,.3)','rgba(255,255,255,.15)'];
+  for (let i = 0; i < 22; i++) {
+    const p = document.createElement('div');
+    p.className = 'p';
+    const sz = Math.random() * 4 + 2;
+    p.style.cssText = [
+      'width:' + sz + 'px',
+      'height:' + sz + 'px',
+      'left:' + Math.random() * 100 + '%',
+      'background:' + colors[Math.floor(Math.random() * colors.length)],
+      'animation-duration:' + (Math.random() * 14 + 10) + 's',
+      'animation-delay:' + Math.random() * 10 + 's',
+      'filter:blur(' + (sz > 4 ? 1 : 0) + 'px)'
+    ].join(';');
+    c.appendChild(p);
+  }
+})();
+
+// ═══ HELPERS ═══════════════════════════════════════════
+function isFri(d) { return d.getDay() === 5; }
+function wDays(yr, mo) {
+  let c = 0, d = new Date(yr, mo, 1);
+  while (d.getMonth() === mo) { if (!isFri(d)) c++; d.setDate(d.getDate() + 1); }
+  return c;
+}
+function mKey(d)    { return BNM[d.getMonth()] + ' ' + d.getFullYear(); }
+function parseMKey(s){ const p = s.split(' '); return new Date(+p[1], BNM.indexOf(p[0]), 1); }
+
+function parseDate(s) {
+  if (!s) return null;
+  s = s.toString().trim().replace(/\s+/g,' ');
+  if (!s) return null;
+  let m;
+  if ((m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/))) return new Date(+m[3], +m[2]-1, +m[1]);
+  if ((m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/))) return new Date(+m[1], +m[2]-1, +m[3]);
+  if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) {
+    if (+m[1] > 12) return new Date(+m[3], +m[2]-1, +m[1]);
+    if (+m[2] > 12) return new Date(+m[3], +m[1]-1, +m[2]);
+    return new Date(+m[3], +m[2]-1, +m[1]);
+  }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+function splitCSVLine(l) {
+  const r=[]; let c='',q=false;
+  for (let i=0;i<l.length;i++) {
+    if (l[i]==='"') q=!q;
+    else if (l[i]===',' && !q) { r.push(c); c=''; }
+    else c+=l[i];
+  }
+  r.push(c); return r;
+}
+function parseCSV(txt) {
+  const lines = txt.trim().split(/\r?\n/);
+  const hdrs  = splitCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g,''));
+  const rows  = [];
+  for (let i=1; i<lines.length; i++) {
+    const ln = lines[i].trim(); if (!ln) continue;
+    const vals = splitCSVLine(ln); const obj = {};
+    hdrs.forEach((h,j) => { obj[h] = (vals[j]||'').trim().replace(/^"|"$/g,''); });
+    rows.push(obj);
+  }
+  return { hdrs, rows };
+}
+function simHash(s) {
+  let h=0; for (let i=0; i<Math.min(s.length,5000); i++) h=(h*31+s.charCodeAt(i))|0; return h;
+}
+
+// ═══ COLUMN DETECTION ══════════════════════════════════
+function detectColumns(hdrs) {
+  function bestCol(candidates) {
+    let best=null, bestScore=-1;
+    hdrs.forEach(h => {
+      const hl = h.toLowerCase().trim();
+      candidates.forEach(([kw,score]) => {
+        if (hl===kw && score+100>bestScore)          { best=h; bestScore=score+100; }
+        else if (hl.includes(kw) && score>bestScore) { best=h; bestScore=score; }
+      });
+    });
+    return best;
+  }
+  const cols = {
+    date:    bestCol([['date',90],['তারিখ',90],['ডেট',85]]),
+    empId:   bestCol([['employee_id',95],['emp_id',95],['empid',90],['employee id',90],['কর্মচারী আইডি',90],['আইডি',80],['id',30]]),
+    name:    bestCol([['employee_name',95],['emp_name',90],['full name',90],['fullname',85],['কর্মচারীর নাম',90],['নাম',80],['name',70]]),
+    inTime:  bestCol([['in_time',90],['in time',90],['intime',85],['ইন টাইম',90],['check in',85],['আসার',80],['in',30]]),
+    outTime: bestCol([['out_time',90],['out time',90],['outtime',85],['আউট টাইম',90],['check out',85],['যাওয়ার',80],['out',30]]),
+    dept:    bestCol([['department',90],['dept',85],['বিভাগ',90],['designation',70],['section',65]]),
+    status:  bestCol([['status',90],['উপস্থিতি',90],['অবস্থা',85],['attendance',80]]),
+    // ★ NEW: LEAVE column
+    leave:   bestCol([['leave',95],['ছুটি',90],['lv',85],['leave_status',95]]),
+  };
+  if (!cols.empId && hdrs.length>0) cols.empId = hdrs[0];
+  if (!cols.name  && hdrs.length>1) cols.name  = hdrs[1];
+  return cols;
+}
+
+// ═══ BUILD EMPLOYEES ════════════════════════════════════
+function buildEmps(rows, hdrs) {
+  const cols = detectColumns(hdrs);
+  detectedCols = cols;
+  const emps = {};
+
+  rows.forEach(row => {
+    const rawId = cols.empId ? (row[cols.empId]||'').toString().trim() : '';
+    if (!rawId) return;
+
+    const rawName = cols.name ? (row[cols.name]||'').toString().trim() : '';
+    const rawDept = cols.dept ? (row[cols.dept]||'').toString().trim() : '';
+
+    if (!emps[rawId]) {
+      emps[rawId] = { id:rawId, name:rawName||rawId, dept:rawDept||'',
+        avatar:stableAvatar(rawId), records:[] };
+    }
+
+    const dateStr = cols.date ? row[cols.date] : '';
+    const dObj = parseDate(dateStr);
+    if (!dObj) return;
+
+    const inT  = cols.inTime  ? (row[cols.inTime]  ||'').trim() : '';
+    const outT = cols.outTime ? (row[cols.outTime] ||'').trim() : '';
+    const fri  = isFri(dObj);
+
+    // ★ Check LEAVE column first – if "L" (case-insensitive) → approved leave
+    const leaveVal = cols.leave ? (row[cols.leave]||'').trim().toUpperCase() : '';
+    if (leaveVal === 'L') {
+      // Approved leave: do NOT count as absent or present, just record as 'leave'
+      const existing = emps[rawId].records.find(r => r.date.toDateString()===dObj.toDateString());
+      if (!existing) emps[rawId].records.push({ date:dObj, inTime:'', outTime:'', status:'leave' });
+      return;
+    }
+
+    // Normal status logic
+    let status = null;
+    if (cols.status && row[cols.status]) {
+      const sv = row[cols.status].toLowerCase().trim();
+      if (sv==='present'||sv==='উপস্থিত'||sv==='p')             status = fri ? 'bonus' : 'present';
+      else if (sv==='absent'||sv==='অনুপস্থিত'||sv==='a')       status = 'absent';
+      else if (sv.includes('half')||sv.includes('হাফ')||sv==='h') status = 'half';
+      else if (sv.includes('bonus')||sv.includes('বোনাস'))        status = 'bonus';
+    }
+    if (status===null) {
+      if (fri) { status = (inT||outT) ? 'bonus' : null; }
+      else {
+        if (inT&&outT) status='present';
+        else if (inT)  status='half';
+        else           status='absent';
+      }
+    }
+    if (status===null) return;
+
+    const existing = emps[rawId].records.find(r => r.date.toDateString()===dObj.toDateString());
+    if (existing) {
+      if (inT && !existing.inTime)  existing.inTime  = inT;
+      if (outT && !existing.outTime) existing.outTime = outT;
+      if (fri) existing.status='bonus';
+      else if (existing.inTime&&existing.outTime) existing.status='present';
+      else if (existing.inTime) existing.status='half';
+      return;
+    }
+    emps[rawId].records.push({ date:dObj, inTime:inT, outTime:outT, status });
+  });
+  return emps;
+}
+
+// ═══ STATS ═════════════════════════════════════════════
+function getStats(empId, monthStr) {
+  const emp = employees[empId]; if (!emp) return null;
+  const ref = parseMKey(monthStr);
+  const yr=ref.getFullYear(), mo=ref.getMonth();
+  const wd = wDays(yr,mo);
+
+  const recMap={};
+  emp.records.forEach(r => {
+    if (r.date.getFullYear()===yr && r.date.getMonth()===mo)
+      recMap[r.date.getDate()] = r;
+  });
+
+  let presentFull=0, presentHalf=0, absent=0, bonus=0, leave=0;
+  const d = new Date(yr,mo,1);
+  while (d.getMonth()===mo) {
+    const rec = recMap[d.getDate()];
+    if (isFri(d)) {
+      if (rec && rec.status==='bonus') bonus++;
+    } else {
+      if (rec) {
+        if      (rec.status==='present') presentFull++;
+        else if (rec.status==='half')    presentHalf++;
+        else if (rec.status==='leave')   leave++;       // ★ approved leave
+        else                             absent++;
+      } else {
+        const thisDay = new Date(yr,mo,d.getDate());
+        if (thisDay <= NOW) absent++;
+      }
+    }
+    d.setDate(d.getDate()+1);
+  }
+
+  const presentDisplay = presentFull + presentHalf*0.5;
+  // Attendance rate excludes approved leave days from denominator
+  const effectiveWd = wd - leave;
+
+  return {
+    present:      Math.round(presentDisplay*10)/10,
+    presentFull, presentHalf,
+    absent, bonus, leave,
+    workDays: wd,
+    effectiveWd,
+  };
+}
+
+function statusDotColor(empId) {
+  const emp = employees[empId]; if (!emp) return '#94a3b8';
+  const rec = emp.records.find(r => r.date.toDateString()===NOW.toDateString());
+  if (!rec) return isFri(NOW) ? '#94a3b8' : '#dc2626';
+  if (rec.status==='present') return '#16a34a';
+  if (rec.status==='half')    return '#f59e0b';
+  if (rec.status==='bonus')   return '#7c3aed';
+  if (rec.status==='leave')   return '#0891b2';
+  return '#dc2626';
+}
+
+// ═══ DATA FETCH ════════════════════════════════════════
+async function fetchCSV() {
+  let txt=null;
+  try { const r=await fetch(CSV_URL+'&_nc='+Date.now(),{cache:'no-store'}); if(r.ok) txt=await r.text(); } catch(e){}
+  if (!txt) {
+    try {
+      const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(CSV_URL)+'&t='+Date.now());
+      if(r.ok){const j=await r.json();txt=j.contents;}
+    } catch(e){}
+  }
+  return txt;
+}
+
+async function loadData(silent=false) {
+  if (!silent) document.getElementById('grid').innerHTML='<div class="loading"><div class="spinner"></div><p>ডেটা লোড হচ্ছে...</p></div>';
+  const txt = await fetchCSV();
+  if (txt) {
+    const h = simHash(txt);
+    if (h===lastHash && silent) { updSync(); return false; }
+    lastHash=h;
+    const {hdrs,rows} = parseCSV(txt);
+    employees = buildEmps(rows,hdrs);
+    showDebug(hdrs,rows);
+    renderAll(); updSync(); return true;
+  } else {
+    if (!silent) loadDemo(); return false;
+  }
+}
+function updSync() {
+  document.getElementById('last-sync').textContent = 'শেষ আপডেট: '+new Date().toTimeString().slice(0,8);
+}
+function showDebug(hdrs,rows) {
+  const c=detectedCols, el=document.getElementById('debug'); if(!c)return;
+  el.innerHTML='🔍 কলাম: তারিখ=<b>'+(c.date||'❌')+'</b> | আইডি=<b>'+(c.empId||'❌')+'</b> | নাম=<b>'+(c.name||'❌')+'</b> | ইন=<b>'+(c.inTime||'❌')+'</b> | আউট=<b>'+(c.outTime||'❌')+'</b> | ছুটি=<b>'+(c.leave||'❌')+'</b> | EMPLOYE=<b>'+Object.keys(employees).length+'</b> | মোট রো=<b>'+rows.length+'</b>';
+  el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),9000);
+}
+
+function loadDemo() {
+  const samp=[
+    {id:'EMP001',name:'মোঃ রাকিবুল ইসলাম',dept:'প্রশাসন'},
+    {id:'EMP002',name:'ফারহানা আক্তার',dept:'হিসাব বিভাগ'},
+    {id:'EMP003',name:'মোঃ সাইফুল হাসান',dept:'আইটি বিভাগ'},
+    {id:'EMP004',name:'নুসরাত জাহান',dept:'মানব সম্পদ'},
+    {id:'EMP005',name:'মোঃ তানভীর আহমেদ',dept:'বিপণন'},
+    {id:'EMP006',name:'সুমাইয়া বেগম',dept:'প্রশাসন'},
+  ];
+  employees={};
+  samp.forEach(e => {
+    employees[e.id]={id:e.id,name:e.name,dept:e.dept,avatar:stableAvatar(e.id),records:[]};
+    for (let mOff=0;mOff<3;mOff++) {
+      const base=new Date(NOW.getFullYear(),NOW.getMonth()-mOff,1);
+      const yr=base.getFullYear(),mo=base.getMonth();
+      const days=new Date(yr,mo+1,0).getDate();
+      for (let day=1;day<=days;day++) {
+        if (mOff===0&&day>NOW.getDate()) break;
+        const dt=new Date(yr,mo,day); const fri=isFri(dt); const rnd=Math.random();
+        if (fri) { if(rnd<0.2) employees[e.id].records.push({date:dt,inTime:'09:00',outTime:'17:00',status:'bonus'}); }
+        else {
+          if      (rnd<0.06) employees[e.id].records.push({date:dt,inTime:'',outTime:'',status:'absent'});
+          else if (rnd<0.10) employees[e.id].records.push({date:dt,inTime:'',outTime:'',status:'leave'}); // demo leave
+          else if (rnd<0.16) employees[e.id].records.push({date:dt,inTime:'09:15',outTime:'',status:'half'});
+          else               employees[e.id].records.push({date:dt,inTime:'09:00',outTime:'17:00',status:'present'});
+        }
+      }
+    }
+  });
+  renderAll(); updSync();
+  toast('ডেমো ডেটা লোড হয়েছে');
+}
+
+// ═══ RENDER ════════════════════════════════════════════
+function allMonths() {
+  const set=new Set();
+  Object.values(employees).forEach(e=>e.records.forEach(r=>set.add(mKey(r.date))));
+  set.add(mKey(NOW));
+  return Array.from(set).sort((a,b)=>parseMKey(a)-parseMKey(b));
+}
+function renderAll() { fillMF();fillDF();renderGrid();renderHdrStats(); }
+function fillMF() {
+  const ms=allMonths(),sel=document.getElementById('mF'),pv=sel.value;
+  sel.innerHTML=ms.map(m=>'<option value="'+m+'">'+m+'</option>').join('');
+  const cm=mKey(NOW);
+  sel.value=ms.includes(pv)?pv:ms.includes(cm)?cm:ms[ms.length-1];
+}
+function fillDF() {
+  const deps=[...new Set(Object.values(employees).map(e=>e.dept))];
+  const sel=document.getElementById('dF'),pv=sel.value;
+  sel.innerHTML='<option value="">সকল বিভাগ</option>'+deps.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
+  if(pv)sel.value=pv;
+}
+function doFilter(){renderGrid();}
+
+function renderGrid() {
+  const q=document.getElementById('q').value.toLowerCase();
+  const dept=document.getElementById('dF').value;
+  const ms=document.getElementById('mF').value;
+  const emps=Object.values(employees).filter(e=>
+    (!q||e.name.toLowerCase().includes(q)||e.id.toLowerCase().includes(q))&&(!dept||e.dept===dept)
+  );
+  const g=document.getElementById('grid');
+  if(!emps.length){g.innerHTML='<div class="empty">🔍<p style="margin-top:10px;color:rgba(255,255,255,.4)">No Employe</p></div>';return;}
+
+  g.innerHTML=emps.map(e=>{
+    const s=getStats(e.id,ms);
+    const rate=s&&s.effectiveWd>0?Math.round((s.present/s.effectiveWd)*100):0;
+    const dot=statusDotColor(e.id);
+    const fb='https://ui-avatars.com/api/?name='+encodeURIComponent(e.name)+'&background=1a56db&color=fff&size=180';
+    return '<div class="emp-card" onclick="openProf(\''+e.id.replace(/'/g,"\\'")+'\')">'
+      +'<div class="ec-top">'
+      +'<div class="av-wrap">'
+      +'<img class="ec-av" src="'+e.avatar+'" alt="'+e.name+'" onerror="this.onerror=null;this.src=\''+fb+'\'">'
+      +'<span class="status-dot" style="background:'+dot+';color:'+dot+'"></span>'
+      +'</div>'
+      +'<div class="ec-name">'+e.name+'</div>'
+      +'<div class="ec-sub">🆔 '+e.id+'</div>'
+      +'<span class="ec-dept">DOLCE'+e.dept+'</span>'
+      +'</div>'
+      +'<div class="ec-body">'
+      +'<div class="ms-row">'
+      +'<div class="ms ms-p"><div class="ms-v">'+(s?s.present:'-')+'</div><div class="ms-l">উপস্থিত</div></div>'
+      +'<div class="ms ms-a"><div class="ms-v">'+(s?s.absent:'-')+'</div><div class="ms-l">অনুপস্থিত</div></div>'
+      +'<div class="ms ms-h"><div class="ms-v">'+(s?s.presentHalf:'-')+'</div><div class="ms-l">হাফ টাইম</div></div>'
+      +'<div class="ms ms-b"><div class="ms-v">'+(s?s.bonus:'-')+'</div><div class="ms-l">বোনাস</div></div>'
+      +'<div class="ms ms-lv"><div class="ms-v">'+(s?s.leave:'-')+'</div><div class="ms-l">ছুটি</div></div>'
+      +'</div>'
+      +'<div class="pb-row"><span class="pb-l">কর্ম দিবস: '+(s?s.workDays:'-')+'</span><span class="pb-p">'+rate+'%</span></div>'
+      +'<div class="pbar"><div class="pbar-f" style="width:'+rate+'%"></div></div>'
+      +'</div></div>';
+  }).join('');
+}
+
+function renderHdrStats() {
+  document.getElementById('s-tot').textContent=Object.keys(employees).length;
+  const tk=NOW.toDateString(); let p=0,a=0,h=0,b=0,lv=0;
+  Object.values(employees).forEach(e=>{
+    const rec=e.records.find(r=>r.date.toDateString()===tk);
+    if(rec){
+      if(rec.status==='present')p++;
+      else if(rec.status==='absent')a++;
+      else if(rec.status==='half')h++;
+      else if(rec.status==='bonus')b++;
+      else if(rec.status==='leave')lv++;
+    } else if(!isFri(NOW))a++;
+  });
+  document.getElementById('s-pre').textContent=p;
+  document.getElementById('s-abs').textContent=a;
+  document.getElementById('s-hal').textContent=h;
+  document.getElementById('s-bon').textContent=b;
+  document.getElementById('s-lv').textContent=lv;
+}
+
+// ═══ MODAL ═════════════════════════════════════════════
+function openProf(id) {
+  curEmp=id; const emp=employees[id];
+  const fb='https://ui-avatars.com/api/?name='+encodeURIComponent(emp.name)+'&background=1a56db&color=fff&size=180';
+  const av=document.getElementById('mAv'); av.src=emp.avatar; av.onerror=()=>{av.onerror=null;av.src=fb;};
+  document.getElementById('mNm').textContent=emp.name;
+  document.getElementById('mId').textContent='🆔 '+emp.id;
+  document.getElementById('mDp').textContent='DOLCE'+emp.dept;
+  const months=allMonths(),cm=mKey(NOW);
+  const opts=months.map(m=>'<option value="'+m+'"'+(m===cm?' selected':'')+'>'+m+'</option>').join('');
+  ['ovM','logM','repM'].forEach(sid=>document.getElementById(sid).innerHTML=opts);
+  switchTab('ov');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');curEmp=null;}
+function ovClick(e){if(e.target.id==='overlay')closeModal();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+function switchTab(tab) {
+  ['ov','hist','log','rep'].forEach((t,i)=>{
+    document.querySelectorAll('.tab-btn')[i].classList.toggle('on',t===tab);
+    document.getElementById('tc-'+t).classList.toggle('on',t===tab);
+  });
+  if(tab==='ov')   renderOv();
+  if(tab==='hist') renderHist();
+  if(tab==='log')  renderLog();
+  if(tab==='rep')  renderRepPrev();
+}
+
+function renderOv() {
+  if(!curEmp)return;
+  const s=getStats(curEmp,document.getElementById('ovM').value); if(!s)return;
+  const rate=s.effectiveWd>0?Math.round((s.present/s.effectiveWd)*100):0;
+  document.getElementById('ovRate').textContent=rate+'%';
+  document.getElementById('ovBar').style.width=rate+'%';
+  document.getElementById('ovCards').innerHTML=
+    '<div class="sc sc-p"><div class="sc-v">'+s.present+'</div><div class="sc-l">✅ উপস্থিত</div></div>'
+   +'<div class="sc sc-a"><div class="sc-v">'+s.absent+'</div><div class="sc-l">❌ অনুপস্থিত</div></div>'
+   +'<div class="sc sc-h"><div class="sc-v">'+s.presentHalf+'</div><div class="sc-l">⏰ হাফ টাইম</div></div>'
+   +'<div class="sc sc-b"><div class="sc-v">'+s.bonus+'</div><div class="sc-l">🌟 বোনাস</div></div>'
+   +'<div class="sc sc-lv"><div class="sc-v">'+s.leave+'</div><div class="sc-l">🏖️ অনু. ছুটি</div></div>'
+   +'<div class="sc sc-t"><div class="sc-v">'+s.workDays+'</div><div class="sc-l">📅 কর্ম দিবস</div></div>';
+}
+
+function renderHist() {
+  if(!curEmp)return;
+  document.getElementById('histBody').innerHTML=allMonths().map(ms=>{
+    const s=getStats(curEmp,ms); if(!s)return'';
+    const rate=s.effectiveWd>0?Math.round((s.present/s.effectiveWd)*100):0;
+    const col=rate>=90?'#16a34a':rate>=70?'#d97706':'#dc2626';
+    return '<tr>'
+      +'<td style="font-weight:600">'+ms+'</td>'
+      +'<td style="color:#16a34a;font-weight:600">'+s.present+'</td>'
+      +'<td style="color:#dc2626;font-weight:600">'+s.absent+'</td>'
+      +'<td style="color:#f59e0b;font-weight:600">'+s.presentHalf+'</td>'
+      +'<td style="color:#7c3aed;font-weight:600">'+s.bonus+'</td>'
+      +'<td style="color:#0891b2;font-weight:600">'+s.leave+'</td>'
+      +'<td>'+s.workDays+'</td>'
+      +'<td><span style="font-weight:800;color:'+col+'">'+rate+'%</span></td>'
+      +'</tr>';
+  }).join('');
+}
+
+function renderLog() {
+  if(!curEmp)return;
+  const ms=document.getElementById('logM').value;
+  const ref=parseMKey(ms); const yr=ref.getFullYear(),mo=ref.getMonth();
+  const emp=employees[curEmp];
+  const recMap={};
+  emp.records.forEach(r=>{if(r.date.getFullYear()===yr&&r.date.getMonth()===mo)recMap[r.date.getDate()]=r;});
+  const days=new Date(yr,mo+1,0).getDate(); let html='';
+  for(let day=1;day<=days;day++){
+    const dt=new Date(yr,mo,day); const fri=isFri(dt); const rec=recMap[day];
+    let badge,inT='-',outT='-';
+    if(fri){
+      if(rec&&rec.status==='bonus'){badge='<span class="badge bb">🌟 বোনাস</span>';inT=rec.inTime||'-';outT=rec.outTime||'-';}
+      else badge='<span class="badge bho">🏖️ সরকারি ছুটি</span>';
+    } else if(rec&&rec.status==='leave'){
+      badge='<span class="badge blv">🏖️ অনুমোদিত ছুটি</span>';
+    } else {
+      if(rec){
+        inT=rec.inTime||'-';outT=rec.outTime||'-';
+        if(rec.status==='present')      badge='<span class="badge bp">✅ উপস্থিত</span>';
+        else if(rec.status==='half')    badge='<span class="badge bh">⏰ হাফ টাইম</span>';
+        else                            badge='<span class="badge ba">❌ অনুপস্থিত</span>';
+      } else {
+        const thisDay=new Date(yr,mo,day);
+        badge=thisDay<=NOW?'<span class="badge ba">❌ অনুপস্থিত</span>':'<span class="badge bho">— অপেক্ষায়</span>';
+      }
+    }
+    const isLv=rec&&rec.status==='leave';
+    html+='<tr class="'+(isLv?'lv-row':fri&&(!rec||rec.status!=='bonus')?'fri':'')+'">'
+      +'<td>'+day+' '+BNM[mo]+', '+yr+'</td>'
+      +'<td>'+BND[dt.getDay()]+'</td>'
+      +'<td>'+inT+'</td>'
+      +'<td>'+outT+'</td>'
+      +'<td>'+badge+'</td>'
+      +'</tr>';
+  }
+  document.getElementById('logBody').innerHTML=html;
+}
+
+function renderRepPrev() {
+  if(!curEmp)return;
+  const ms=document.getElementById('repM').value;
+  const s=getStats(curEmp,ms); const emp=employees[curEmp];
+  const rate=s&&s.effectiveWd>0?Math.round((s.present/s.effectiveWd)*100):0;
+  const fb='https://ui-avatars.com/api/?name='+encodeURIComponent(emp.name)+'&background=1a56db&color=fff';
+  document.getElementById('repPrev').innerHTML=
+    '<div style="border:2px solid #1a56db;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 0 20px rgba(26,86,219,.1)">'
+   +'<div style="background:linear-gradient(135deg,#1a56db,#1e40af);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:14px;">'
+   +'<img src="'+emp.avatar+'" style="width:58px;height:58px;border-radius:50%;border:2.5px solid rgba(255,255,255,.6);flex-shrink:0;object-fit:cover;box-shadow:0 0 12px rgba(255,255,255,.3)" onerror="this.onerror=null;this.src=\''+fb+'\'">'
+   +'<div style="flex:1"><div style="font-size:16px;font-weight:800">'+emp.name+'</div>'
+   +'<div style="font-size:11px;opacity:.85">'+emp.id+' | '+emp.dept+'</div></div>'
+   +'<div style="text-align:right;font-size:11px;opacity:.9"><div style="font-size:14px;font-weight:700">উপস্থিতি রিপোর্ট ইনভয়েস</div>'
+   +'<div>'+ms+'</div><div>INV-'+emp.id+'-'+ms.replace(' ','-')+'</div></div></div>'
+   +'<div style="padding:14px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;text-align:center;">'
+   +'<div style="background:#dcfce7;border-radius:9px;padding:10px"><div style="font-size:20px;font-weight:800;color:#16a34a">'+(s?s.present:0)+'</div><div style="color:#16a34a;font-size:11px">উপস্থিত</div></div>'
+   +'<div style="background:#fee2e2;border-radius:9px;padding:10px"><div style="font-size:20px;font-weight:800;color:#dc2626">'+(s?s.absent:0)+'</div><div style="color:#dc2626;font-size:11px">অনুপস্থিত</div></div>'
+   +'<div style="background:#fef3c7;border-radius:9px;padding:10px"><div style="font-size:20px;font-weight:800;color:#d97706">'+(s?s.presentHalf:0)+'</div><div style="color:#d97706;font-size:11px">হাফ টাইম</div></div>'
+   +'<div style="background:#ede9fe;border-radius:9px;padding:10px"><div style="font-size:20px;font-weight:800;color:#7c3aed">'+(s?s.bonus:0)+'</div><div style="color:#7c3aed;font-size:11px">বোনাস</div></div>'
+   +'<div style="background:#e0f2fe;border-radius:9px;padding:10px"><div style="font-size:20px;font-weight:800;color:#0891b2">'+(s?s.leave:0)+'</div><div style="color:#0891b2;font-size:11px">অনু. ছুটি</div></div>'
+   +'<div style="background:#f3f4f6;border-radius:9px;padding:10px"><div style="font-size:20px;font-weight:800;color:#374151">'+rate+'%</div><div style="color:#4b5563;font-size:11px">উপস্থিতি হার</div></div>'
+   +'</div></div>';
+}
+
+// ═══ PDF ═══════════════════════════════════════════════
+async function downloadPDF() {
+  if(!curEmp)return;
+  const {jsPDF}=window.jspdf; const doc=new jsPDF();
+  const emp=employees[curEmp];
+  const ms=document.getElementById('repM').value;
+  const s=getStats(curEmp,ms);
+  const ref=parseMKey(ms); const yr=ref.getFullYear(),mo=ref.getMonth();
+  const rate=s&&s.effectiveWd>0?Math.round((s.present/s.effectiveWd)*100):0;
+
+  // Avatar
+  let avData=null;
+  try {
+    const img=new Image(); img.crossOrigin='anonymous';
+    await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=emp.avatar+(emp.avatar.includes('?')?'&':'?')+'r='+Math.random();});
+    const cv=document.createElement('canvas'); cv.width=120;cv.height=120;
+    const ctx=cv.getContext('2d');
+    ctx.beginPath();ctx.arc(60,60,60,0,Math.PI*2);ctx.clip();
+    ctx.drawImage(img,0,0,120,120);
+    avData=cv.toDataURL('image/png');
+  } catch(e) {
+    const cv=document.createElement('canvas');cv.width=120;cv.height=120;
+    const ctx=cv.getContext('2d');
+    ctx.fillStyle='#1a56db'; ctx.beginPath();ctx.arc(60,60,60,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 44px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText((emp.name||'?')[0],60,60);
+    avData=cv.toDataURL('image/png');
+  }
+
+  // Header
+  doc.setFillColor(26,86,219); doc.rect(0,0,210,56,'F');
+  if(avData) doc.addImage(avData,'PNG',10,8,40,40);
+  doc.setDrawColor(255,255,255); doc.setLineWidth(1.5); doc.circle(30,28,20,'S');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16);doc.setFont('helvetica','bold');
+  doc.text('DOLCE ATTENDANCE REPORT INVOICE',58,17);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text('Name: '+emp.name,58,26);
+  doc.text('Generated: '+new Date().toLocaleString(),58,47);
+
+  // Summary
+  let y=66;
+  doc.setTextColor(31,41,55);doc.setFontSize(12);doc.setFont('helvetica','bold');
+  doc.text('Attendance Summary',14,y); y+=7;
+  const srows=[
+    ['Present Days (Full)',   s?s.presentFull:0,'#16a34a'],
+    ['Half-Day Count',        s?s.presentHalf:0,'#f59e0b'],
+    ['Effective Present',     s?s.present:0,    '#16a34a'],
+    ['Absent Days',           s?s.absent:0,     '#dc2626'],
+    ['Approved Leave (L)',    s?s.leave:0,      '#0891b2'],
+    ['Bonus Days (Friday)',   s?s.bonus:0,      '#7c3aed'],
+    ['Total Working Days',    s?s.workDays:0,   '#1a56db'],
+    ['Attendance Rate',       rate+'%',          '#374151'],
+  ];
+  srows.forEach(([lbl,val,hex])=>{
+    doc.setFillColor(248,249,250); doc.roundedRect(14,y,182,12,1.5,1.5,'F');
+    doc.setTextColor(75,85,99);doc.setFontSize(9.5);doc.setFont('helvetica','normal');
+    doc.text(lbl,19,y+8);
+    const hx=hex.replace('#','');
+    doc.setTextColor(parseInt(hx.substr(0,2),16),parseInt(hx.substr(2,2),16),parseInt(hx.substr(4,2),16));
+    doc.setFont('helvetica','bold');doc.text(val.toString(),192,y+8,{align:'right'});
+    y+=15;
+  });
+
+  // Daily log
+  y+=4;
+  doc.setTextColor(31,41,55);doc.setFontSize(12);doc.setFont('helvetica','bold');
+  doc.text('Daily Attendance Log',14,y); y+=3;
+  const days=new Date(yr,mo+1,0).getDate();
+  const rmap={};
+  emp.records.forEach(r=>{if(r.date.getFullYear()===yr&&r.date.getMonth()===mo)rmap[r.date.getDate()]=r;});
+  const trows=[];
+  for(let day=1;day<=days;day++){
+    const dt=new Date(yr,mo,day); const fri=isFri(dt); const rec=rmap[day];
+    let st='Absent',inT='-',outT='-';
+    if(fri){ st=rec&&rec.status==='bonus'?'Bonus':'Holiday'; if(rec){inT=rec.inTime||'-';outT=rec.outTime||'-';} }
+    else if(rec&&rec.status==='leave'){ st='Approved Leave'; }
+    else if(rec){ inT=rec.inTime||'-';outT=rec.outTime||'-';
+      st=rec.status==='present'?'Present':rec.status==='half'?'Half-Day':'Absent'; }
+    trows.push([day+'/'+(mo+1)+'/'+yr,['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()],inT,outT,st]);
+  }
+  doc.autoTable({
+    startY:y,
+    head:[['Date','Day','In Time','Out Time','Status']],
+    body:trows,
+    styles:{fontSize:8.5,cellPadding:2.5},
+    headStyles:{fillColor:[26,86,219],textColor:255,fontStyle:'bold'},
+    alternateRowStyles:{fillColor:[248,250,252]},
+    columnStyles:{0:{cellWidth:28},1:{cellWidth:20},2:{cellWidth:24},3:{cellWidth:24},4:{cellWidth:34}},
+    didParseCell:d=>{
+      if(d.section==='body'&&d.column.index===4){
+        const v=d.cell.raw;
+        if(v==='Present')        d.cell.styles.textColor=[22,163,74];
+        else if(v==='Absent')    d.cell.styles.textColor=[220,38,38];
+        else if(v==='Half-Day')  d.cell.styles.textColor=[217,119,6];
+        else if(v==='Bonus')     d.cell.styles.textColor=[124,58,237];
+        else if(v==='Approved Leave') d.cell.styles.textColor=[8,145,178];
+        else if(v==='Holiday')   d.cell.styles.textColor=[107,114,128];
+      }
+    }
+  });
+
+  const pgs=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pgs;i++){
+    doc.setPage(i);
+    doc.setFillColor(26,86,219);doc.rect(0,287,210,10,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text('Smart Attendance System — Confidential Report',14,293);
+    doc.text('Page '+i+' of '+pgs,196,293,{align:'right'});
+  }
+  doc.save(emp.name+'_'+ms+'_Invoice.pdf');
+  toast('PDF ইনভয়েস ডাউনলোড হয়েছে!');
+}
+
+// ═══ SYNC ══════════════════════════════════════════════
+async function manualSync(){
+  const ico=document.getElementById('sync-ico');
+  ico.innerHTML='<span class="sync-ring"></span>';
+  const changed=await loadData(false);
+  ico.textContent='🔄';
+  toast(changed?'ডেটা আপডেট হয়েছে ✓':'কোনো পরিবর্তন নেই');
+}
+function startAutoSync(){
+  setInterval(async()=>{
+    const changed=await loadData(true);
+    if(changed){
+      toast('নতুন ডেটা পাওয়া গেছে ✓');
+      if(curEmp){
+        const active=['ov','hist','log','rep'].find(t=>document.getElementById('tc-'+t).classList.contains('on'));
+        if(active==='ov')   renderOv();
+        if(active==='hist') renderHist();
+        if(active==='log')  renderLog();
+        if(active==='rep')  renderRepPrev();
+      }
+    }
+  },3000);
+}
+function toast(msg){
+  const el=document.getElementById('toast');
+  document.getElementById('toast-txt').textContent=msg;
+  el.classList.add('show'); clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// ═══ INIT ══════════════════════════════════════════════
+(async()=>{
+  await loadData(false);
+  startAutoSync();
+})();
+</script>
+</body>
+</html>
