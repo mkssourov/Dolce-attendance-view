@@ -378,7 +378,7 @@ body::after{
   <div id="debug" class="debug-panel"></div>
 
   <div class="stats-bar">
-    <div class="stat-card"><div class="stat-ic" style="background:#e8f0fe">👥</div><div><div class="stat-lbl">মোট কর্মচারী</div><div class="stat-val" id="s-tot">-</div></div></div>
+    <div class="stat-card"><div class="stat-ic" style="background:#e8f0fe">👥</div><div><div class="stat-lbl">TOTAL EMPLOEES</div><div class="stat-val" id="s-tot">-</div></div></div>
     <div class="stat-card"><div class="stat-ic" style="background:#dcfce7">✅</div><div><div class="stat-lbl">আজ উপস্থিত</div><div class="stat-val" id="s-pre">-</div></div></div>
     <div class="stat-card"><div class="stat-ic" style="background:#fee2e2">❌</div><div><div class="stat-lbl">আজ অনুপস্থিত</div><div class="stat-val" id="s-abs">-</div></div></div>
     <div class="stat-card"><div class="stat-ic" style="background:#fef3c7">⏰</div><div><div class="stat-lbl">হাফ টাইম</div><div class="stat-val" id="s-hal">-</div></div></div>
@@ -459,7 +459,7 @@ const AV_BG = ['b6e3f4','d1d4f9','c0aede','ffd5dc','ffdfbf','e0f7fa','f3e5f5','d
 function stableAvatar(empId) {
   const seed = encodeURIComponent(empId.trim());
   const bgIdx = [...empId].reduce((a,c) => a + c.charCodeAt(0), 0) % AV_BG.length;
-  return 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + seed + '&backgroundColor=' + AV_BG[bgIdx];
+  return '' + seed + '&backgroundColor=' + AV_BG[bgIdx];
 }
 
 const BND = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
