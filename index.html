@@ -3,9 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DOLCE ATTENDANCE</title>
+<title>DOLCE ATTENDENCE</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script>
+  // ── CDN fallback: if cdnjs is blocked on this network, retry from a
+  //    second CDN so PDF export still works instead of silently failing.
+  window.addEventListener('DOMContentLoaded', function () {
+    function loadScript(src) {
+      return new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = src; s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    function ensurePdfLibs() {
+      var needsJsPDF     = !(window.jspdf && window.jspdf.jsPDF);
+      var needsAutoTable = needsJsPDF ? false : !(new window.jspdf.jsPDF().autoTable);
+      var tasks = [];
+      if (needsJsPDF) {
+        tasks.push(loadScript('https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'));
+      }
+      if (Promise.all) {
+        Promise.all(tasks).then(function () {
+          if (!(window.jspdf && new window.jspdf.jsPDF().autoTable)) {
+            loadScript('https://unpkg.com/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js')
+              .catch(function () { console.warn('autoTable fallback CDN also failed'); });
+          }
+        }).catch(function () { console.warn('jsPDF fallback CDN also failed'); });
+      }
+    }
+    // Give the primary CDN ~1.5s to land before checking
+    setTimeout(ensurePdfLibs, 1500);
+  });
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -242,10 +273,18 @@ body::after{
 }
 .m-hdr{padding:22px 26px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
 .m-prof{display:flex;align-items:center;gap:18px;}
+.m-av-wrap{position:relative;flex-shrink:0;}
 .m-av{
   width:80px;height:80px;border-radius:50%;object-fit:cover;
   border:3px solid #fff;box-shadow:0 0 0 3px var(--primary),var(--glow-blue);
 }
+.m-av-edit{
+  position:absolute;bottom:-2px;right:-2px;width:28px;height:28px;border-radius:50%;
+  background:var(--primary);color:#fff;border:2px solid #fff;cursor:pointer;
+  font-size:12px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(26,86,219,.4);transition:var(--tr);
+}
+.m-av-edit:hover{background:var(--primary-dark);transform:scale(1.12);box-shadow:0 0 12px rgba(26,86,219,.5);}
 .m-info h2{font-size:20px;font-weight:800;color:var(--g900);}
 .m-info .mid{font-size:12px;color:var(--g500);margin-top:3px;}
 .m-info .mdept{font-size:12px;color:var(--primary);font-weight:600;margin-top:3px;}
@@ -341,11 +380,91 @@ body::after{
 /* ─── GLOWING DIVIDER ─── */
 .glow-hr{height:1px;border:none;background:linear-gradient(90deg,transparent,rgba(26,86,219,.4),transparent);margin:20px 0;}
 
+/* ─── PHOTO MANAGER MODAL ─── */
+.pm-overlay{position:fixed;inset:0;background:rgba(10,15,40,.75);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px);}
+.pm-overlay.open{display:flex;}
+.pm-box{
+  background:#fff;border-radius:20px;width:100%;max-width:760px;max-height:90vh;
+  overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px rgba(26,86,219,.15),0 32px 80px rgba(0,0,0,.3),var(--glow-blue);
+}
+.pm-head{
+  background:linear-gradient(135deg,#1a56db,#1e40af);color:#fff;
+  padding:18px 24px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.pm-head h3{font-size:17px;font-weight:700;display:flex;align-items:center;gap:9px;}
+.pm-head p{font-size:12px;opacity:.75;margin-top:3px;}
+.pm-close{background:rgba(255,255,255,.15);border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:17px;color:#fff;display:flex;align-items:center;justify-content:center;transition:var(--tr);flex-shrink:0;}
+.pm-close:hover{background:rgba(220,38,38,.6);}
+.pm-search{padding:14px 20px;border-bottom:1px solid var(--g100);flex-shrink:0;}
+.pm-search input{width:100%;padding:9px 16px 9px 38px;border:1px solid var(--g300);border-radius:9px;font-size:14px;outline:none;transition:var(--tr);background:var(--g50);}
+.pm-search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.1);}
+.pm-search .pm-si{position:absolute;left:34px;top:50%;transform:translateY(-50%);color:var(--g400);font-size:15px;pointer-events:none;}
+.pm-search-wrap{position:relative;}
+.pm-list{overflow-y:auto;flex:1;padding:14px 20px;display:flex;flex-direction:column;gap:10px;}
+.pm-row{
+  display:flex;align-items:center;gap:14px;
+  background:var(--g50);border:1px solid var(--g200);border-radius:12px;
+  padding:12px 14px;transition:var(--tr);
+}
+.pm-row:hover{border-color:var(--primary);background:#f0f4ff;}
+.pm-av{
+  width:54px;height:54px;border-radius:50%;object-fit:cover;flex-shrink:0;
+  border:2px solid #fff;box-shadow:0 0 0 2px var(--primary);
+  transition:var(--tr);cursor:pointer;
+}
+.pm-av:hover{transform:scale(1.08);box-shadow:0 0 0 2px var(--primary),var(--glow-blue);}
+.pm-info{flex:1;min-width:0;}
+.pm-name{font-size:14px;font-weight:700;color:var(--g900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pm-id{font-size:11px;color:var(--g500);margin-top:1px;}
+.pm-url-wrap{display:flex;gap:8px;margin-top:8px;align-items:center;}
+.pm-url-input{
+  flex:1;padding:7px 11px;border:1px solid var(--g300);border-radius:8px;
+  font-size:12px;outline:none;transition:var(--tr);background:#fff;color:var(--g700);
+  min-width:0;
+}
+.pm-url-input:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(26,86,219,.12);}
+.pm-url-input.saved{border-color:var(--success);background:#f0fdf4;}
+.pm-save-btn{
+  background:var(--primary);color:#fff;border:none;padding:7px 14px;border-radius:8px;
+  cursor:pointer;font-size:12px;font-weight:600;transition:var(--tr);white-space:nowrap;
+  flex-shrink:0;
+}
+.pm-save-btn:hover{background:var(--primary-dark);box-shadow:0 0 10px rgba(26,86,219,.3);}
+.pm-save-btn.ok{background:var(--success);}
+.pm-clear-btn{
+  background:var(--g100);color:var(--g600);border:none;padding:7px 10px;border-radius:8px;
+  cursor:pointer;font-size:12px;font-weight:600;transition:var(--tr);flex-shrink:0;
+}
+.pm-clear-btn:hover{background:var(--danger-light);color:var(--danger);}
+.pm-footer{padding:14px 20px;border-top:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--g50);}
+.pm-reset-btn{background:var(--danger-light);color:var(--danger);border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:var(--tr);}
+.pm-reset-btn:hover{background:var(--danger);color:#fff;}
+.pm-hint{font-size:11px;color:var(--g500);}
+
+/* ─── PHOTO MGR BUTTON in header ─── */
+.pm-btn{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+  color:#fff;padding:7px 14px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;
+  transition:var(--tr);display:flex;align-items:center;gap:6px;
+  box-shadow:0 0 12px rgba(255,255,255,.05);
+}
+.pm-btn:hover{background:rgba(255,255,255,.22);box-shadow:0 0 20px rgba(255,255,255,.12);}
+
 @media(max-width:620px){
   .main{padding:14px;}
   .m-hdr,.m-tabs,.m-body{padding-left:16px;padding-right:16px;}
   .modal{border-radius:16px;}
   .ms-row{grid-template-columns:repeat(3,1fr);}
+  .pm-box{border-radius:14px;max-height:94vh;}
+  .pm-head,.pm-search,.pm-list,.pm-footer{padding-left:14px;padding-right:14px;}
+  .pm-url-wrap{flex-wrap:wrap;}
+  .pm-url-input{min-width:140px;}
+  .pm-row{flex-direction:column;align-items:flex-start;}
+  .pm-av{align-self:center;}
+  .pm-footer{flex-direction:column;gap:10px;align-items:flex-start;}
+  .hdr-right{width:100%;justify-content:flex-start;}
 }
 </style>
 </head>
@@ -365,6 +484,7 @@ body::after{
     </div>
     <div class="hdr-right">
       <div class="live-badge"><span class="live-dot"></span> লাইভ অটো-সিঙ্ক</div>
+      <button class="pm-btn" onclick="openPhotoMgr()">🖼️ Add Photo</button>
       <div>
         <button class="sync-btn" onclick="manualSync()"><span id="sync-ico">🔄</span> এখনই আপডেট</button>
         <div class="last-sync" id="last-sync">শেষ আপডেট: লোড হচ্ছে...</div>
@@ -378,7 +498,7 @@ body::after{
   <div id="debug" class="debug-panel"></div>
 
   <div class="stats-bar">
-    <div class="stat-card"><div class="stat-ic" style="background:#e8f0fe">👥</div><div><div class="stat-lbl">TOTAL EMPLOEES</div><div class="stat-val" id="s-tot">-</div></div></div>
+    <div class="stat-card"><div class="stat-ic" style="background:#e8f0fe">👥</div><div><div class="stat-lbl">TOTAL EMPLOYEES</div><div class="stat-val" id="s-tot">-</div></div></div>
     <div class="stat-card"><div class="stat-ic" style="background:#dcfce7">✅</div><div><div class="stat-lbl">আজ উপস্থিত</div><div class="stat-val" id="s-pre">-</div></div></div>
     <div class="stat-card"><div class="stat-ic" style="background:#fee2e2">❌</div><div><div class="stat-lbl">আজ অনুপস্থিত</div><div class="stat-val" id="s-abs">-</div></div></div>
     <div class="stat-card"><div class="stat-ic" style="background:#fef3c7">⏰</div><div><div class="stat-lbl">হাফ টাইম</div><div class="stat-val" id="s-hal">-</div></div></div>
@@ -400,7 +520,10 @@ body::after{
   <div class="modal">
     <div class="m-hdr">
       <div class="m-prof">
-        <img class="m-av" id="mAv" src="" alt="">
+        <div class="m-av-wrap">
+          <img class="m-av" id="mAv" src="" alt="">
+          <button class="m-av-edit" onclick="openPhotoMgr(curEmp)" title="ছবি পরিবর্তন করুন">✏️</button>
+        </div>
         <div class="m-info"><h2 id="mNm"></h2><div class="mid" id="mId"></div><div class="mdept" id="mDp"></div></div>
       </div>
       <button class="close-btn" onclick="closeModal()">✕</button>
@@ -451,6 +574,30 @@ body::after{
   </div>
 </div>
 
+<!-- PHOTO MANAGER MODAL -->
+<div class="pm-overlay" id="pmOverlay" onclick="pmOverlayClick(event)">
+  <div class="pm-box">
+    <div class="pm-head">
+      <div>
+        <h3>🖼️ কর্মচারীর ছবি ব্যবস্থাপনা</h3>
+        <p>URL পেস্ট করুন → সেভ করুন — ছবি স্থায়ীভাবে সংরক্ষিত হবে</p>
+      </div>
+      <button class="pm-close" onclick="closePhotoMgr()">✕</button>
+    </div>
+    <div class="pm-search">
+      <div class="pm-search-wrap">
+        <span class="pm-si">🔍</span>
+        <input type="text" id="pmQ" placeholder="কর্মচারীর নাম বা আইডি খুঁজুন..." oninput="renderPhotoMgr()">
+      </div>
+    </div>
+    <div class="pm-list" id="pmList"></div>
+    <div class="pm-footer">
+      <div class="pm-hint">💡 যেকোনো সরাসরি ছবির লিংক (jpg, png, svg) দিন। Google Drive শেয়ার লিংকও কাজ করবে।</div>
+      <button class="pm-reset-btn" onclick="resetAllPhotos()">🗑️ সব ছবি মুছুন</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══ CONFIG ═══════════════════════════════════════════
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRKLe15yfAAG2cY47l0fjsF9oPum_Db8JEUGB-kFlq9BsywkI-zBrpzHl4XX0g-wbARM7YvJ-wM6SdL/pub?gid=1893840663&single=true&output=csv';
@@ -459,7 +606,40 @@ const AV_BG = ['b6e3f4','d1d4f9','c0aede','ffd5dc','ffdfbf','e0f7fa','f3e5f5','d
 function stableAvatar(empId) {
   const seed = encodeURIComponent(empId.trim());
   const bgIdx = [...empId].reduce((a,c) => a + c.charCodeAt(0), 0) % AV_BG.length;
-  return '' + seed + '&backgroundColor=' + AV_BG[bgIdx];
+  return 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + seed + '&backgroundColor=' + AV_BG[bgIdx];
+}
+
+// ═══ CUSTOM PHOTO STORAGE (URL-based, persists in localStorage) ═══
+const PHOTO_STORE_KEY = 'attendance_custom_photos_v1';
+function loadCustomPhotos() {
+  try {
+    const raw = localStorage.getItem(PHOTO_STORE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+function saveCustomPhotos(map) {
+  try { localStorage.setItem(PHOTO_STORE_KEY, JSON.stringify(map)); return true; }
+  catch(e) { return false; }
+}
+let customPhotos = loadCustomPhotos(); // { empId: "https://..." }
+
+function setCustomPhoto(empId, url) {
+  url = (url || '').trim();
+  if (url) customPhotos[empId] = url;
+  else delete customPhotos[empId];
+  saveCustomPhotos(customPhotos);
+  // Update the live employees object immediately
+  if (employees[empId]) employees[empId].avatar = resolveAvatar(empId);
+}
+function clearCustomPhoto(empId) {
+  delete customPhotos[empId];
+  saveCustomPhotos(customPhotos);
+  if (employees[empId]) employees[empId].avatar = resolveAvatar(empId);
+}
+function resolveAvatar(empId) {
+  // Priority: custom URL set by admin > auto-generated stable avatar
+  if (customPhotos[empId]) return customPhotos[empId];
+  return stableAvatar(empId);
 }
 
 const BND = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
@@ -583,7 +763,7 @@ function buildEmps(rows, hdrs) {
 
     if (!emps[rawId]) {
       emps[rawId] = { id:rawId, name:rawName||rawId, dept:rawDept||'',
-        avatar:stableAvatar(rawId), records:[] };
+        avatar:resolveAvatar(rawId), records:[] };
     }
 
     const dateStr = cols.date ? row[cols.date] : '';
@@ -726,7 +906,7 @@ function updSync() {
 }
 function showDebug(hdrs,rows) {
   const c=detectedCols, el=document.getElementById('debug'); if(!c)return;
-  el.innerHTML='🔍 কলাম: তারিখ=<b>'+(c.date||'❌')+'</b> | আইডি=<b>'+(c.empId||'❌')+'</b> | নাম=<b>'+(c.name||'❌')+'</b> | ইন=<b>'+(c.inTime||'❌')+'</b> | আউট=<b>'+(c.outTime||'❌')+'</b> | ছুটি=<b>'+(c.leave||'❌')+'</b> | EMPLOYE=<b>'+Object.keys(employees).length+'</b> | মোট রো=<b>'+rows.length+'</b>';
+  el.innerHTML='🔍 কলাম: তারিখ=<b>'+(c.date||'❌')+'</b> | আইডি=<b>'+(c.empId||'❌')+'</b> | নাম=<b>'+(c.name||'❌')+'</b> | ইন=<b>'+(c.inTime||'❌')+'</b> | আউট=<b>'+(c.outTime||'❌')+'</b> | ছুটি=<b>'+(c.leave||'❌')+'</b> | কর্মচারী=<b>'+Object.keys(employees).length+'</b> | মোট রো=<b>'+rows.length+'</b>';
   el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),9000);
 }
 
@@ -741,7 +921,7 @@ function loadDemo() {
   ];
   employees={};
   samp.forEach(e => {
-    employees[e.id]={id:e.id,name:e.name,dept:e.dept,avatar:stableAvatar(e.id),records:[]};
+    employees[e.id]={id:e.id,name:e.name,dept:e.dept,avatar:resolveAvatar(e.id),records:[]};
     for (let mOff=0;mOff<3;mOff++) {
       const base=new Date(NOW.getFullYear(),NOW.getMonth()-mOff,1);
       const yr=base.getFullYear(),mo=base.getMonth();
@@ -793,7 +973,7 @@ function renderGrid() {
     (!q||e.name.toLowerCase().includes(q)||e.id.toLowerCase().includes(q))&&(!dept||e.dept===dept)
   );
   const g=document.getElementById('grid');
-  if(!emps.length){g.innerHTML='<div class="empty">🔍<p style="margin-top:10px;color:rgba(255,255,255,.4)">No Employe</p></div>';return;}
+  if(!emps.length){g.innerHTML='<div class="empty">🔍<p style="margin-top:10px;color:rgba(255,255,255,.4)">কোনো কর্মচারী পাওয়া যায়নি</p></div>';return;}
 
   g.innerHTML=emps.map(e=>{
     const s=getStats(e.id,ms);
@@ -808,7 +988,7 @@ function renderGrid() {
       +'</div>'
       +'<div class="ec-name">'+e.name+'</div>'
       +'<div class="ec-sub">🆔 '+e.id+'</div>'
-      +'<span class="ec-dept">DOLCE'+e.dept+'</span>'
+      +'<span class="ec-dept">DOLCE '+e.dept+'</span>'
       +'</div>'
       +'<div class="ec-body">'
       +'<div class="ms-row">'
@@ -851,7 +1031,7 @@ function openProf(id) {
   const av=document.getElementById('mAv'); av.src=emp.avatar; av.onerror=()=>{av.onerror=null;av.src=fb;};
   document.getElementById('mNm').textContent=emp.name;
   document.getElementById('mId').textContent='🆔 '+emp.id;
-  document.getElementById('mDp').textContent='DOLCE'+emp.dept;
+  document.getElementById('mDp').textContent='DOLCE '+emp.dept;
   const months=allMonths(),cm=mKey(NOW);
   const opts=months.map(m=>'<option value="'+m+'"'+(m===cm?' selected':'')+'>'+m+'</option>').join('');
   ['ovM','logM','repM'].forEach(sid=>document.getElementById(sid).innerHTML=opts);
@@ -860,7 +1040,131 @@ function openProf(id) {
 }
 function closeModal(){document.getElementById('overlay').classList.remove('open');curEmp=null;}
 function ovClick(e){if(e.target.id==='overlay')closeModal();}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModal();closePhotoMgr();}
+});
+
+// ═══ PHOTO MANAGER ═════════════════════════════════════
+let pmFocusEmpId = null; // if opened from a specific employee's edit pencil
+
+function openPhotoMgr(focusId) {
+  pmFocusEmpId = focusId || null;
+  document.getElementById('pmQ').value = '';
+  renderPhotoMgr();
+  document.getElementById('pmOverlay').classList.add('open');
+  // Auto-scroll & highlight the focused employee's row shortly after render
+  if (pmFocusEmpId) {
+    setTimeout(() => {
+      const row = document.getElementById('pmrow-' + cssSafe(pmFocusEmpId));
+      if (row) {
+        row.scrollIntoView({ block: 'center' });
+        const input = row.querySelector('.pm-url-input');
+        if (input) input.focus();
+      }
+    }, 80);
+  }
+}
+function closePhotoMgr() {
+  document.getElementById('pmOverlay').classList.remove('open');
+  pmFocusEmpId = null;
+}
+function pmOverlayClick(e) { if (e.target.id === 'pmOverlay') closePhotoMgr(); }
+function cssSafe(id) { return id.toString().replace(/[^a-zA-Z0-9_-]/g, '_'); }
+
+function renderPhotoMgr() {
+  const q = document.getElementById('pmQ').value.toLowerCase();
+  const list = document.getElementById('pmList');
+  let emps = Object.values(employees).filter(e =>
+    !q || e.name.toLowerCase().includes(q) || e.id.toLowerCase().includes(q)
+  );
+  // Put the focused employee at the top, if any
+  if (pmFocusEmpId) {
+    emps = emps.slice().sort((a, b) => (a.id === pmFocusEmpId ? -1 : b.id === pmFocusEmpId ? 1 : 0));
+  }
+
+  if (!emps.length) {
+    list.innerHTML = '<div class="empty" style="padding:30px;">🔍<p style="margin-top:8px">কোনো কর্মচারী পাওয়া যায়নি</p></div>';
+    return;
+  }
+
+  list.innerHTML = emps.map(e => {
+    const safeId = cssSafe(e.id);
+    const hasCustom = !!customPhotos[e.id];
+    const currentUrl = customPhotos[e.id] || '';
+    const fb = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(e.name) + '&background=1a56db&color=fff&size=120';
+    return '<div class="pm-row" id="pmrow-' + safeId + '">'
+      + '<img class="pm-av" id="pmav-' + safeId + '" src="' + e.avatar + '" alt="' + e.name + '" onerror="this.onerror=null;this.src=\'' + fb + '\'" onclick="document.getElementById(\'pmurl-' + safeId + '\').focus()">'
+      + '<div class="pm-info">'
+      + '<div class="pm-name">' + e.name + (hasCustom ? ' <span style="color:#16a34a;font-size:11px;font-weight:600">● কাস্টম ছবি</span>' : '') + '</div>'
+      + '<div class="pm-id">🆔 ' + e.id + ' | DOLCE ' + e.dept + '</div>'
+      + '<div class="pm-url-wrap">'
+      + '<input type="text" class="pm-url-input" id="pmurl-' + safeId + '" placeholder="ছবির URL পেস্ট করুন (https://...)" value="' + escapeAttr(currentUrl) + '" onkeydown="if(event.key===\'Enter\')savePhoto(\'' + e.id.replace(/'/g, "\\'") + '\')">'
+      + '<button class="pm-save-btn" id="pmsave-' + safeId + '" onclick="savePhoto(\'' + e.id.replace(/'/g, "\\'") + '\')">💾 সেভ</button>'
+      + (hasCustom ? '<button class="pm-clear-btn" onclick="clearPhoto(\'' + e.id.replace(/'/g, "\\'") + '\')" title="কাস্টম ছবি মুছুন, অটো-ছবিতে ফিরে যান">↺</button>' : '')
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function escapeAttr(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function savePhoto(empId) {
+  const safeId = cssSafe(empId);
+  const input = document.getElementById('pmurl-' + safeId);
+  const url = input.value.trim();
+
+  if (!url) { toast('একটি ছবির URL লিখুন'); input.focus(); return; }
+  try { new URL(url); } catch(e) { toast('সঠিক URL দিন (https:// দিয়ে শুরু)'); input.focus(); return; }
+
+  setCustomPhoto(empId, url);
+
+  // Visual feedback
+  input.classList.add('saved');
+  const btn = document.getElementById('pmsave-' + safeId);
+  const origText = btn.textContent;
+  btn.textContent = '✓ সেভ হয়েছে'; btn.classList.add('ok');
+  setTimeout(() => { btn.textContent = origText; btn.classList.remove('ok'); }, 1500);
+
+  // Update the avatar preview live (with cache-bust)
+  const avImg = document.getElementById('pmav-' + safeId);
+  if (avImg) avImg.src = url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+
+  // Refresh everywhere this avatar is shown
+  refreshAvatarsEverywhere(empId);
+  toast('✅ ' + (employees[empId] ? employees[empId].name : empId) + '-এর ছবি সেভ হয়েছে');
+}
+
+function clearPhoto(empId) {
+  clearCustomPhoto(empId);
+  refreshAvatarsEverywhere(empId);
+  renderPhotoMgr();
+  toast('ছবি রিসেট হয়েছে — অটো-জেনারেট ছবি ফিরিয়ে আনা হয়েছে');
+}
+
+function resetAllPhotos() {
+  if (!Object.keys(customPhotos).length) { toast('কোনো কাস্টম ছবি নেই'); return; }
+  if (!confirm('আপনি কি নিশ্চিত? সব কর্মচারীর কাস্টম ছবি মুছে যাবে এবং অটো-জেনারেট ছবি ফিরে আসবে।')) return;
+  Object.keys(customPhotos).forEach(id => clearCustomPhoto(id));
+  renderPhotoMgr();
+  renderGrid();
+  toast('সব কাস্টম ছবি মুছে ফেলা হয়েছে');
+}
+
+function refreshAvatarsEverywhere(empId) {
+  if (!employees[empId]) return;
+  // Re-render the main grid (cards use the live `employees[id].avatar`)
+  renderGrid();
+  // If the profile modal for this employee is open, update it too
+  if (curEmp === empId) {
+    const fb = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(employees[empId].name) + '&background=1a56db&color=fff&size=180';
+    const av = document.getElementById('mAv');
+    av.src = employees[empId].avatar + (employees[empId].avatar.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+    av.onerror = () => { av.onerror = null; av.src = fb; };
+  }
+}
 
 function switchTab(tab) {
   ['ov','hist','log','rep'].forEach((t,i)=>{
@@ -973,115 +1277,178 @@ function renderRepPrev() {
 // ═══ PDF ═══════════════════════════════════════════════
 async function downloadPDF() {
   if(!curEmp)return;
-  const {jsPDF}=window.jspdf; const doc=new jsPDF();
-  const emp=employees[curEmp];
-  const ms=document.getElementById('repM').value;
-  const s=getStats(curEmp,ms);
-  const ref=parseMKey(ms); const yr=ref.getFullYear(),mo=ref.getMonth();
-  const rate=s&&s.effectiveWd>0?Math.round((s.present/s.effectiveWd)*100):0;
 
-  // Avatar
-  let avData=null;
+  // Guard: jsPDF library failed to load (CDN blocked / network issue).
+  // Wait briefly first — the fallback-CDN loader (see <head>) may still be
+  // fetching it, especially right after the page just opened.
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    toast('⏳ PDF লাইব্রেরি লোড হচ্ছে, একটু অপেক্ষা করুন...');
+    let waited = 0;
+    while ((!window.jspdf || !window.jspdf.jsPDF) && waited < 4000) {
+      await new Promise(r => setTimeout(r, 250));
+      waited += 250;
+    }
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      toast('❌ PDF লাইব্রেরি লোড হয়নি — ইন্টারনেট সংযোগ চেক করে পেজ রিফ্রেশ করুন');
+      return;
+    }
+  }
+
+  const dlBtn = document.querySelector('.dl-btn');
+  const origBtnHtml = dlBtn ? dlBtn.innerHTML : null;
+  if (dlBtn) { dlBtn.innerHTML = '⏳ তৈরি হচ্ছে...'; dlBtn.disabled = true; dlBtn.style.opacity = '.7'; dlBtn.style.cursor = 'wait'; }
+
   try {
-    const img=new Image(); img.crossOrigin='anonymous';
-    await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=emp.avatar+(emp.avatar.includes('?')?'&':'?')+'r='+Math.random();});
-    const cv=document.createElement('canvas'); cv.width=120;cv.height=120;
-    const ctx=cv.getContext('2d');
-    ctx.beginPath();ctx.arc(60,60,60,0,Math.PI*2);ctx.clip();
-    ctx.drawImage(img,0,0,120,120);
-    avData=cv.toDataURL('image/png');
-  } catch(e) {
-    const cv=document.createElement('canvas');cv.width=120;cv.height=120;
-    const ctx=cv.getContext('2d');
-    ctx.fillStyle='#1a56db'; ctx.beginPath();ctx.arc(60,60,60,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='bold 44px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText((emp.name||'?')[0],60,60);
-    avData=cv.toDataURL('image/png');
-  }
+    const {jsPDF}=window.jspdf; const doc=new jsPDF();
+    const emp=employees[curEmp];
+    const ms=document.getElementById('repM').value;
+    const s=getStats(curEmp,ms);
+    const ref=parseMKey(ms); const yr=ref.getFullYear(),mo=ref.getMonth();
+    const rate=s&&s.effectiveWd>0?Math.round((s.present/s.effectiveWd)*100):0;
 
-  // Header
-  doc.setFillColor(26,86,219); doc.rect(0,0,210,56,'F');
-  if(avData) doc.addImage(avData,'PNG',10,8,40,40);
-  doc.setDrawColor(255,255,255); doc.setLineWidth(1.5); doc.circle(30,28,20,'S');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(16);doc.setFont('helvetica','bold');
-  doc.text('DOLCE ATTENDANCE REPORT INVOICE',58,17);
-  doc.setFontSize(10);doc.setFont('helvetica','normal');
-  doc.text('Name: '+emp.name,58,26);
-  doc.text('Generated: '+new Date().toLocaleString(),58,47);
+    // ── Avatar → base64 PNG ──────────────────────────────
+    // IMPORTANT: drawing a cross-origin image onto a canvas then calling
+    // toDataURL() throws a SecurityError ("tainted canvas") unless the
+    // remote server sends correct CORS headers. DiceBear/ui-avatars usually
+    // do, but this must NEVER be allowed to abort the whole PDF — so the
+    // canvas step has its OWN try/catch that always falls back to an
+    // initials-avatar drawn locally (which is never tainted).
+    let avData = null;
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const loadedOk = await new Promise((res) => {
+        const t = setTimeout(() => res(false), 6000); // 6s safety timeout
+        img.onload  = () => { clearTimeout(t); res(true); };
+        img.onerror = () => { clearTimeout(t); res(false); };
+        img.src = emp.avatar + (emp.avatar.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+      });
+      if (!loadedOk) throw new Error('avatar image failed to load');
 
-  // Summary
-  let y=66;
-  doc.setTextColor(31,41,55);doc.setFontSize(12);doc.setFont('helvetica','bold');
-  doc.text('Attendance Summary',14,y); y+=7;
-  const srows=[
-    ['Present Days (Full)',   s?s.presentFull:0,'#16a34a'],
-    ['Half-Day Count',        s?s.presentHalf:0,'#f59e0b'],
-    ['Effective Present',     s?s.present:0,    '#16a34a'],
-    ['Absent Days',           s?s.absent:0,     '#dc2626'],
-    ['Approved Leave (L)',    s?s.leave:0,      '#0891b2'],
-    ['Bonus Days (Friday)',   s?s.bonus:0,      '#7c3aed'],
-    ['Total Working Days',    s?s.workDays:0,   '#1a56db'],
-    ['Attendance Rate',       rate+'%',          '#374151'],
-  ];
-  srows.forEach(([lbl,val,hex])=>{
-    doc.setFillColor(248,249,250); doc.roundedRect(14,y,182,12,1.5,1.5,'F');
-    doc.setTextColor(75,85,99);doc.setFontSize(9.5);doc.setFont('helvetica','normal');
-    doc.text(lbl,19,y+8);
-    const hx=hex.replace('#','');
-    doc.setTextColor(parseInt(hx.substr(0,2),16),parseInt(hx.substr(2,2),16),parseInt(hx.substr(4,2),16));
-    doc.setFont('helvetica','bold');doc.text(val.toString(),192,y+8,{align:'right'});
-    y+=15;
-  });
-
-  // Daily log
-  y+=4;
-  doc.setTextColor(31,41,55);doc.setFontSize(12);doc.setFont('helvetica','bold');
-  doc.text('Daily Attendance Log',14,y); y+=3;
-  const days=new Date(yr,mo+1,0).getDate();
-  const rmap={};
-  emp.records.forEach(r=>{if(r.date.getFullYear()===yr&&r.date.getMonth()===mo)rmap[r.date.getDate()]=r;});
-  const trows=[];
-  for(let day=1;day<=days;day++){
-    const dt=new Date(yr,mo,day); const fri=isFri(dt); const rec=rmap[day];
-    let st='Absent',inT='-',outT='-';
-    if(fri){ st=rec&&rec.status==='bonus'?'Bonus':'Holiday'; if(rec){inT=rec.inTime||'-';outT=rec.outTime||'-';} }
-    else if(rec&&rec.status==='leave'){ st='Approved Leave'; }
-    else if(rec){ inT=rec.inTime||'-';outT=rec.outTime||'-';
-      st=rec.status==='present'?'Present':rec.status==='half'?'Half-Day':'Absent'; }
-    trows.push([day+'/'+(mo+1)+'/'+yr,['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()],inT,outT,st]);
-  }
-  doc.autoTable({
-    startY:y,
-    head:[['Date','Day','In Time','Out Time','Status']],
-    body:trows,
-    styles:{fontSize:8.5,cellPadding:2.5},
-    headStyles:{fillColor:[26,86,219],textColor:255,fontStyle:'bold'},
-    alternateRowStyles:{fillColor:[248,250,252]},
-    columnStyles:{0:{cellWidth:28},1:{cellWidth:20},2:{cellWidth:24},3:{cellWidth:24},4:{cellWidth:34}},
-    didParseCell:d=>{
-      if(d.section==='body'&&d.column.index===4){
-        const v=d.cell.raw;
-        if(v==='Present')        d.cell.styles.textColor=[22,163,74];
-        else if(v==='Absent')    d.cell.styles.textColor=[220,38,38];
-        else if(v==='Half-Day')  d.cell.styles.textColor=[217,119,6];
-        else if(v==='Bonus')     d.cell.styles.textColor=[124,58,237];
-        else if(v==='Approved Leave') d.cell.styles.textColor=[8,145,178];
-        else if(v==='Holiday')   d.cell.styles.textColor=[107,114,128];
+      const cv = document.createElement('canvas'); cv.width = 120; cv.height = 120;
+      const ctx = cv.getContext('2d');
+      ctx.beginPath(); ctx.arc(60, 60, 60, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(img, 0, 0, 120, 120);
+      avData = cv.toDataURL('image/png'); // ← can throw SecurityError if tainted
+    } catch (avErr) {
+      // Fallback: draw a clean initials avatar locally — this canvas is
+      // never "tainted" since nothing cross-origin touches it.
+      try {
+        const cv = document.createElement('canvas'); cv.width = 120; cv.height = 120;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#1a56db';
+        ctx.beginPath(); ctx.arc(60, 60, 60, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 44px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText((emp.name || '?').trim()[0] || '?', 60, 60);
+        avData = cv.toDataURL('image/png');
+      } catch (e2) {
+        avData = null; // worst case: PDF still generates, just without a photo
       }
     }
-  });
 
-  const pgs=doc.internal.getNumberOfPages();
-  for(let i=1;i<=pgs;i++){
-    doc.setPage(i);
-    doc.setFillColor(26,86,219);doc.rect(0,287,210,10,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','normal');
-    doc.text('Smart Attendance System — Confidential Report',14,293);
-    doc.text('Page '+i+' of '+pgs,196,293,{align:'right'});
+    // ── Header ────────────────────────────────────────────
+    doc.setFillColor(26,86,219); doc.rect(0,0,210,56,'F');
+    if (avData) {
+      doc.addImage(avData,'PNG',10,8,40,40);
+      doc.setDrawColor(255,255,255); doc.setLineWidth(1.5); doc.circle(30,28,20,'S');
+    }
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(16);doc.setFont('helvetica','bold');
+    doc.text('DOLCE ATTENDANCE REPORT INVOICE',58,17);
+    doc.setFontSize(10);doc.setFont('helvetica','normal');
+    doc.text('Name : '+emp.name,58,26);
+    doc.text('Generated: '+new Date().toLocaleString(),58,47);
+
+    // ── Summary ───────────────────────────────────────────
+    let y=66;
+    doc.setTextColor(31,41,55);doc.setFontSize(12);doc.setFont('helvetica','bold');
+    doc.text('Attendance Summary',14,y); y+=7;
+    const srows=[
+      ['Present Days (Full)',   s?s.presentFull:0,'#16a34a'],
+      ['Half-Day Count',        s?s.presentHalf:0,'#f59e0b'],
+      ['Effective Present',     s?s.present:0,    '#16a34a'],
+      ['Absent Days',           s?s.absent:0,     '#dc2626'],
+      ['Approved Leave (L)',    s?s.leave:0,      '#0891b2'],
+      ['Bonus Days (Friday)',   s?s.bonus:0,      '#7c3aed'],
+      ['Total Working Days',    s?s.workDays:0,   '#1a56db'],
+      ['Attendance Rate',       rate+'%',          '#374151'],
+    ];
+    srows.forEach(([lbl,val,hex])=>{
+      doc.setFillColor(248,249,250); doc.roundedRect(14,y,182,12,1.5,1.5,'F');
+      doc.setTextColor(75,85,99);doc.setFontSize(9.5);doc.setFont('helvetica','normal');
+      doc.text(lbl,19,y+8);
+      const hx=hex.replace('#','');
+      doc.setTextColor(parseInt(hx.substr(0,2),16),parseInt(hx.substr(2,2),16),parseInt(hx.substr(4,2),16));
+      doc.setFont('helvetica','bold');doc.text(val.toString(),192,y+8,{align:'right'});
+      y+=15;
+    });
+
+    // ── Daily log ─────────────────────────────────────────
+    y+=4;
+    doc.setTextColor(31,41,55);doc.setFontSize(12);doc.setFont('helvetica','bold');
+    doc.text('Daily Attendance Log',14,y); y+=3;
+    const days=new Date(yr,mo+1,0).getDate();
+    const rmap={};
+    emp.records.forEach(r=>{if(r.date.getFullYear()===yr&&r.date.getMonth()===mo)rmap[r.date.getDate()]=r;});
+    const trows=[];
+    for(let day=1;day<=days;day++){
+      const dt=new Date(yr,mo,day); const fri=isFri(dt); const rec=rmap[day];
+      let st='Absent',inT='-',outT='-';
+      if(fri){ st=rec&&rec.status==='bonus'?'Bonus':'Holiday'; if(rec){inT=rec.inTime||'-';outT=rec.outTime||'-';} }
+      else if(rec&&rec.status==='leave'){ st='Approved Leave'; }
+      else if(rec){ inT=rec.inTime||'-';outT=rec.outTime||'-';
+        st=rec.status==='present'?'Present':rec.status==='half'?'Half-Day':'Absent'; }
+      trows.push([day+'/'+(mo+1)+'/'+yr,['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()],inT,outT,st]);
+    }
+
+    // Guard: autoTable plugin failed to load
+    if (typeof doc.autoTable !== 'function') {
+      throw new Error('autoTable plugin not loaded');
+    }
+
+    doc.autoTable({
+      startY:y,
+      head:[['Date','Day','In Time','Out Time','Status']],
+      body:trows,
+      styles:{fontSize:8.5,cellPadding:2.5},
+      headStyles:{fillColor:[26,86,219],textColor:255,fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[248,250,252]},
+      columnStyles:{0:{cellWidth:28},1:{cellWidth:20},2:{cellWidth:24},3:{cellWidth:24},4:{cellWidth:34}},
+      didParseCell:d=>{
+        if(d.section==='body'&&d.column.index===4){
+          const v=d.cell.raw;
+          if(v==='Present')        d.cell.styles.textColor=[22,163,74];
+          else if(v==='Absent')    d.cell.styles.textColor=[220,38,38];
+          else if(v==='Half-Day')  d.cell.styles.textColor=[217,119,6];
+          else if(v==='Bonus')     d.cell.styles.textColor=[124,58,237];
+          else if(v==='Approved Leave') d.cell.styles.textColor=[8,145,178];
+          else if(v==='Holiday')   d.cell.styles.textColor=[107,114,128];
+        }
+      }
+    });
+
+    const pgs=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pgs;i++){
+      doc.setPage(i);
+      doc.setFillColor(26,86,219);doc.rect(0,287,210,10,'F');
+      doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','normal');
+      doc.text('DOLCE Smart Attendance System — Confidential Report',14,293);
+      doc.text('Page '+i+' of '+pgs,196,293,{align:'right'});
+    }
+
+    // ── Save (sanitize filename — slashes/colons in names break downloads) ──
+    const safeName = (emp.name || 'Employee').replace(/[\\\/:*?"<>|]/g, '_');
+    const safeMonth = (ms || 'Report').replace(/[\\\/:*?"<>|]/g, '_');
+    doc.save(safeName + '_' + safeMonth + '_Invoice.pdf');
+    toast('✅ PDF ইনভয়েস ডাউনলোড হয়েছে!');
+
+  } catch (err) {
+    console.error('PDF generation failed:', err);
+    toast('❌ PDF তৈরি ব্যর্থ হয়েছে: ' + (err && err.message ? err.message : 'অজানা সমস্যা'));
+  } finally {
+    if (dlBtn) { dlBtn.innerHTML = origBtnHtml; dlBtn.disabled = false; dlBtn.style.opacity = ''; dlBtn.style.cursor = ''; }
   }
-  doc.save(emp.name+'_'+ms+'_Invoice.pdf');
-  toast('PDF ইনভয়েস ডাউনলোড হয়েছে!');
 }
 
 // ═══ SYNC ══════════════════════════════════════════════
