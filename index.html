@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DOLCE ATTENDENCE</title>
+<title>DOLCE ATTENDANCE VIEW</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script>
@@ -480,7 +480,7 @@ body::after{
   <div class="hdr-in">
     <div class="hdr-logo">
       <div class="logo-ic">D</div>
-      <div><h1>DOLCE</h1><p>SMART ATTENDENCE</p></div>
+      <div><h1>DOLCE</h1><p>SMART ATTENDENCE SYSTEM</p></div>
     </div>
     <div class="hdr-right">
       <div class="live-badge"><span class="live-dot"></span> লাইভ অটো-সিঙ্ক</div>
@@ -511,7 +511,7 @@ body::after{
     <select class="fsel" id="dF" onchange="doFilter()"><option value="">সকল বিভাগ</option></select>
     <select class="fsel" id="mF" onchange="doFilter()"></select>
   </div>
-  <div class="sec-title">👤 EMPLOYE LIST</div>
+  <div class="sec-title">👤 EMPLOYEE LIST</div>
   <div class="emp-grid" id="grid"><div class="loading"><div class="spinner"></div><p>ডেটা লোড হচ্ছে...</p></div></div>
 </div>
 
@@ -579,7 +579,7 @@ body::after{
   <div class="pm-box">
     <div class="pm-head">
       <div>
-        <h3>🖼️ কর্মচারীর ছবি ব্যবস্থাপনা</h3>
+        <h3>🖼️ EMPLOYEES PHOTO ADDET</h3>
         <p>URL পেস্ট করুন → সেভ করুন — ছবি স্থায়ীভাবে সংরক্ষিত হবে</p>
       </div>
       <button class="pm-close" onclick="closePhotoMgr()">✕</button>
@@ -592,7 +592,7 @@ body::after{
     </div>
     <div class="pm-list" id="pmList"></div>
     <div class="pm-footer">
-      <div class="pm-hint">💡 যেকোনো সরাসরি ছবির লিংক (jpg, png, svg) দিন। Google Drive শেয়ার লিংকও কাজ করবে।</div>
+      <div class="pm-hint">💡 যেকোনো সরাসরি ছবির লিংক দিন (jpg, png, svg)। অথবা HTML ফাইলের <b>EMPLOYEE_PHOTO_CONFIG</b> সেকশনে সরাসরি URL লিখুন।</div>
       <button class="pm-reset-btn" onclick="resetAllPhotos()">🗑️ সব ছবি মুছুন</button>
     </div>
   </div>
@@ -622,6 +622,111 @@ function saveCustomPhotos(map) {
   catch(e) { return false; }
 }
 let customPhotos = loadCustomPhotos(); // { empId: "https://..." }
+
+// ════════════════════════════════════════════════════════════════════
+//  📸  কর্মচারীর ছবি কনফিগারেশন
+//  ─────────────────────────────────────────────────────────────────
+//  নিচের তালিকায় প্রতিটি কর্মচারীর Employee ID-র পাশে তার ছবির
+//  সরাসরি URL বসিয়ে দিন।
+//
+//  ✅ যেকোনো সরাসরি ছবির লিংক কাজ করে:
+//     • Google Drive:  লিংক শেয়ার করুন → লিংক কপি করুন →
+//       https://drive.google.com/uc?export=view&id=<FILE_ID>
+//     • WhatsApp-এ পাঠানো ছবি: ছবিতে রাইট-ক্লিক → "ছবির ঠিকানা কপি করুন"
+//     • যেকোনো .jpg / .png / .webp এর সরাসরি লিংক
+//
+//  ❌ URL না দিলে বা '' রাখলে অটো-জেনারেট অ্যাভাটার ব্যবহার হবে।
+//
+//  💡 এখানে পরিবর্তন করলে পেজ রিফ্রেশের পরে কার্যকর হবে।
+//     "ছবি ব্যবস্থাপনা" প্যানেল থেকেও রিয়েল-টাইমে পরিবর্তন করা যাবে।
+// ════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════════════════
+//
+//   📸  কর্মচারীর ছবি কনফিগারেশন  —  সরাসরি এখানে URL বসান
+//
+//   ┌─────────────────────────────────────────────────────────────────────┐
+//   │  নিয়ম: প্রতিটি কর্মচারীর Employee ID-র পাশে তার ছবির URL লিখুন  │
+//   │                                                                     │
+//   │  ✅ যেকোনো সরাসরি ছবির লিংক (.jpg / .png / .jpeg / .webp)        │
+//   │                                                                     │
+//   │  ✅ Google Drive থেকে ছবি দিতে চাইলে:                            │
+//   │     ১. Drive-এ ছবিতে রাইট-ক্লিক → "শেয়ার করুন"                  │
+//   │     ২. "যে কেউ লিংক থাকলে দেখতে পারবে" সেট করুন                 │
+//   │     ৩. লিংক থেকে FILE_ID বের করুন:                               │
+//   │        https://drive.google.com/file/d/FILE_ID/view               │
+//   │     ৪. এভাবে লিখুন:                                               │
+//   │        https://drive.google.com/uc?export=view&id=FILE_ID         │
+//   │                                                                     │
+//   │  ❌ URL খালি '' রাখলে → অটো-জেনারেট অ্যাভাটার ব্যবহার হবে       │
+//   │  💡 "ছবি ব্যবস্থাপনা" বাটন থেকেও রিয়েল-টাইমে বদলানো যাবে       │
+//   └─────────────────────────────────────────────────────────────────────┘
+//
+// ════════════════════════════════════════════════════════════════════════════
+
+const EMPLOYEE_PHOTO_CONFIG = {
+
+  // ──────────────────────────────────────────────────────────────────
+  //  কর্মচারী আইডি    :   ছবির URL
+  //  (ডানদিকের লিংকটি পরিবর্তন করুন — নামের লাইন শুধু তথ্যের জন্য)
+  // ──────────────────────────────────────────────────────────────────
+   // NAYMER RAHMAN
+  'E69D76A1': 'https://i.ibb.co.com/QF0d3f7c/1775063687724-jpg.jpg',
+
+   // RAKIB SARKER
+  'A64EB3A1': 'https://i.ibb.co.com/hxct2rd5/1775063978884-jpg-1.jpg',
+
+   // FAHAD FARAZI
+  '069EB3A1': 'https://i.ibb.co.com/2302tqJT/1775023890755-jpg.jpg',
+
+   // MKS SOMRAT
+  '90E7A12B': 'https://i.ibb.co.com/YFpFmgTZ/IMG-20260507-WA0013-jpg.jpg',
+
+  // ZUBAYER HOSSAIN
+  'D6ADACA1': 'https://i.ibb.co.com/27qN9MGm/FB-IMG-1775063998580-1-jpg.jpg',
+
+  // JIBON SARKE
+  'F3A849DA': 'https://i.ibb.co.com/GfyHLGVT/Screenshot-2025-06-08-235251.png',
+
+  // SALIM SARKER
+  '4031A32B': 'https://i.ibb.co.com/GfyHLGVT/Screenshot-2025-06-08-235251.png',
+
+  // ABJOL 
+  'C0E157B0': 'https://i.ibb.co.com/GfyHLGVT/Screenshot-2025-06-08-235251.png',
+
+  // MAMUN SARKER
+  '5315E524': 'https://i.ibb.co.com/GfyHLGVT/Screenshot-2025-06-08-235251.png',
+
+  
+  // ──────────────────────────────────────────────────────────────────
+  //  নতুন কর্মচারী যোগ করতে নিচের ফরম্যাট অনুসরণ করুন:
+  //
+  //  // নাম : [কর্মচারীর নাম] | বিভাগ : [বিভাগের নাম]
+  //  'EMP021': 'https://আসল-ছবির-লিংক.jpg',
+  //
+  //  অথবা URL না থাকলে খালি রাখুন (অটো-অ্যাভাটার হবে):
+  //  'EMP021': '',
+  // ──────────────────────────────────────────────────────────────────
+
+};
+
+// ── CODE-LEVEL CONFIG থেকে customPhotos-এ merge করুন ──────────────
+// localStorage-এ সেভ করা URL-এর চেয়ে CODE-এ লেখা URL সর্বদা প্রাধান্য পাবে,
+// তবে শুধু তখনই যখন code-এ কোনো মান ('' নয়) দেওয়া হয়েছে।
+(function mergePhotoConfig() {
+  let changed = false;
+  Object.entries(EMPLOYEE_PHOTO_CONFIG).forEach(([empId, url]) => {
+    url = (url || '').trim();
+    if (url) {
+      // Code-level URL always wins — overwrite localStorage for this ID
+      customPhotos[empId] = url;
+      changed = true;
+    }
+    // If url is '' and localStorage has a value → keep the localStorage value
+    // (so Photo Manager UI edits survive code reloads)
+  });
+  if (changed) saveCustomPhotos(customPhotos);
+})();
 
 function setCustomPhoto(empId, url) {
   url = (url || '').trim();
@@ -762,7 +867,7 @@ function buildEmps(rows, hdrs) {
     const rawDept = cols.dept ? (row[cols.dept]||'').toString().trim() : '';
 
     if (!emps[rawId]) {
-      emps[rawId] = { id:rawId, name:rawName||rawId, dept:rawDept||'',
+      emps[rawId] = { id:rawId, name:rawName||rawId, dept:rawDept||'DOLCE',
         avatar:resolveAvatar(rawId), records:[] };
     }
 
@@ -906,7 +1011,7 @@ function updSync() {
 }
 function showDebug(hdrs,rows) {
   const c=detectedCols, el=document.getElementById('debug'); if(!c)return;
-  el.innerHTML='🔍 কলাম: তারিখ=<b>'+(c.date||'❌')+'</b> | আইডি=<b>'+(c.empId||'❌')+'</b> | নাম=<b>'+(c.name||'❌')+'</b> | ইন=<b>'+(c.inTime||'❌')+'</b> | আউট=<b>'+(c.outTime||'❌')+'</b> | ছুটি=<b>'+(c.leave||'❌')+'</b> | কর্মচারী=<b>'+Object.keys(employees).length+'</b> | মোট রো=<b>'+rows.length+'</b>';
+  el.innerHTML='🔍 কলাম: তারিখ=<b>'+(c.date||'❌')+'</b> | আইডি=<b>'+(c.empId||'❌')+'</b> | নাম=<b>'+(c.name||'❌')+'</b> | ইন=<b>'+(c.inTime||'❌')+'</b> | আউট=<b>'+(c.outTime||'❌')+'</b> | ছুটি=<b>'+(c.leave||'❌')+'</b> | EMPLOYEE=<b>'+Object.keys(employees).length+'</b> | মোট রো=<b>'+rows.length+'</b>';
   el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),9000);
 }
 
@@ -988,7 +1093,7 @@ function renderGrid() {
       +'</div>'
       +'<div class="ec-name">'+e.name+'</div>'
       +'<div class="ec-sub">🆔 '+e.id+'</div>'
-      +'<span class="ec-dept">DOLCE '+e.dept+'</span>'
+      +'<span class="ec-dept"> '+e.dept+'</span>'
       +'</div>'
       +'<div class="ec-body">'
       +'<div class="ms-row">'
@@ -1031,7 +1136,7 @@ function openProf(id) {
   const av=document.getElementById('mAv'); av.src=emp.avatar; av.onerror=()=>{av.onerror=null;av.src=fb;};
   document.getElementById('mNm').textContent=emp.name;
   document.getElementById('mId').textContent='🆔 '+emp.id;
-  document.getElementById('mDp').textContent='DOLCE '+emp.dept;
+  document.getElementById('mDp').textContent=' '+emp.dept;
   const months=allMonths(),cm=mKey(NOW);
   const opts=months.map(m=>'<option value="'+m+'"'+(m===cm?' selected':'')+'>'+m+'</option>').join('');
   ['ovM','logM','repM'].forEach(sid=>document.getElementById(sid).innerHTML=opts);
@@ -1357,7 +1462,7 @@ async function downloadPDF() {
     doc.setFontSize(16);doc.setFont('helvetica','bold');
     doc.text('DOLCE ATTENDANCE REPORT INVOICE',58,17);
     doc.setFontSize(10);doc.setFont('helvetica','normal');
-    doc.text('Name : '+emp.name,58,26);
+    doc.text('NAME : '+emp.name,58,26);
     doc.text('Generated: '+new Date().toLocaleString(),58,47);
 
     // ── Summary ───────────────────────────────────────────
